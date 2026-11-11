@@ -9,7 +9,7 @@ if (!isset($_SESSION['username'] ) || $_SESSION['usertype'] !== 'admin') {
 $host = "localhost";
 $user = "root";
 $password = "";
-$db = "studentportal_db";
+$db = "althea_database";
 
 $data = mysqli_connect($host, $user, $password, $db);
 

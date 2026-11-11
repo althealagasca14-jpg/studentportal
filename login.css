@@ -1,0 +1,224 @@
+/* Login-only styles. Shared portal and dashboard styles are intentionally untouched. */
+.student-login {
+    --deep-green: #075638;
+    --green: #087a4b;
+    --gold: #f3d447;
+    --ink: #192b22;
+    --muted: #63746a;
+    --border: #d8e3db;
+    margin: 0;
+    color: var(--ink);
+    background: #f5f9f6;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+.student-login *, .student-login *::before, .student-login *::after { box-sizing: border-box; }
+.student-login [hidden] { display: none !important; }
+.student-login h1, .student-login h2, .student-login p { margin: 0; }
+.student-login a { color: var(--green); text-underline-offset: 4px; }
+.student-login button, .student-login input { font: inherit; }
+.student-login button { cursor: pointer; }
+.student-login :where(a, button, input, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--green);
+    outline-offset: 4px;
+}
+.student-login .skip-link {
+    position: fixed;
+    z-index: 10;
+    top: 12px;
+    left: 16px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    color: white;
+    background: var(--deep-green);
+    transform: translateY(-160%);
+}
+.student-login .skip-link:focus { transform: translateY(0); }
+.student-login .portal-header {
+    min-height: 88px;
+    padding: 16px clamp(24px, 4.8vw, 92px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    border-bottom: 1px solid #e9efe9;
+    background: white;
+}
+.student-login .portal-brand { display: flex; align-items: center; gap: 13px; text-decoration: none; }
+.student-login .portal-brand strong { display: block; color: var(--deep-green); font-size: 19px; font-weight: 800; letter-spacing: -.6px; line-height: 1.3; }
+.student-login .brand-caption { display: block; margin-top: 3px; color: #69796d; font-size: 11px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; }
+.student-login .school-seal { position: relative; flex: 0 0 auto; display: block; overflow: hidden; border: 3px solid white; border-radius: 50%; background: white; }
+.student-login .school-seal img { position: absolute; top: 50%; left: 50%; width: 190%; max-width: none; height: auto; transform: translate(-50%, -47%); }
+.student-login .school-seal--nav { width: 54px; height: 54px; box-shadow: 0 2px 12px #07563816; }
+.student-login .portal-nav { display: flex; align-items: center; gap: clamp(16px, 2.8vw, 52px); }
+.student-login .portal-nav a { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; color: #59695f; font-weight: 650; text-decoration: none; }
+.student-login .portal-nav a:hover { color: var(--green); }
+.student-login .portal-nav .nav-login { gap: 16px; padding: 10px 22px; border-radius: 10px; background: var(--green); color: white; box-shadow: 0 6px 18px #087a4b1a; }
+.student-login .portal-nav .nav-login:hover { background: var(--deep-green); }
+.student-login .portal-layout { display: grid; grid-template-columns: 1.03fr 1fr; min-height: calc(100svh - 88px); }
+.student-login .welcome-panel { position: relative; isolation: isolate; display: flex; align-items: center; overflow: hidden; padding: 56px clamp(36px, 6.7vw, 128px); color: white; background: linear-gradient(145deg, #087a4b 0%, #086842 50%, #075638 100%); }
+.student-login .welcome-panel::before, .student-login .welcome-panel::after { content: ""; position: absolute; z-index: -1; width: 650px; height: 650px; top: -280px; right: -330px; border: 1px solid #ffffff12; border-radius: 50%; pointer-events: none; }
+.student-login .welcome-panel::after { width: 480px; height: 480px; top: -195px; right: -245px; background: #f3d44703; }
+.student-login .welcome-content { width: 100%; max-width: 660px; margin: auto; }
+.student-login .school-identity { display: flex; align-items: center; gap: 21px; margin-bottom: 54px; }
+.student-login .school-seal--hero { width: clamp(82px, 7vw, 132px); height: clamp(82px, 7vw, 132px); box-shadow: 0 6px 24px #003c2826; }
+.student-login .school-name { font-size: clamp(18px, 1.5vw, 25px); line-height: 1.3; font-weight: 750; letter-spacing: -.7px; }
+.student-login .school-location { margin-top: 6px; color: #c0dfce; font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 1.7px; }
+.student-login .portal-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; color: #f5f2cf; font-size: 12px; font-weight: 750; letter-spacing: 1.8px; text-transform: uppercase; }
+.student-login .portal-eyebrow > span { width: 9px; height: 9px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 5px #f3d44720; }
+.student-login .welcome-message h1 { max-width: 660px; font-size: clamp(42px, 4.4vw, 80px); font-weight: 800; letter-spacing: -.055em; line-height: 1.1; }
+.student-login .welcome-message h1 span { display: block; color: var(--gold); }
+.student-login .welcome-description { max-width: 550px; margin-top: 28px; color: #d0e6da; font-size: clamp(16px, 1.15vw, 20px); line-height: 1.8; }
+.student-login .portal-features { display: flex; flex-wrap: wrap; gap: 10px; margin: 34px 0 0; padding: 0; list-style: none; }
+.student-login .portal-features li { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid #ffffff2b; border-radius: 10px; background: #ffffff0d; color: #edf6ef; font-size: 12px; font-weight: 650; }
+.student-login .portal-features li span { color: var(--gold); font-size: 16px; }
+.student-login .welcome-footer { margin-top: 44px; color: #b9d7c6; font-size: 13px; }
+.student-login .login-panel { display: flex; align-items: center; justify-content: center; min-width: 0; padding: 48px clamp(24px, 4.4vw, 84px); background: radial-gradient(ellipse at top right, #e4f2e9, transparent 58%), #f6f9f6; }
+.student-login .login-card { position: relative; width: 100%; max-width: 520px; padding: 42px clamp(24px, 2.7vw, 48px) 30px; border: 1px solid #e8eee9; border-radius: 24px; background: white; box-shadow: 0 20px 65px #173b2710; }
+.student-login .login-card::before { content: ""; position: absolute; top: -1px; left: 42px; width: 78px; height: 4px; border-radius: 0 0 4px 4px; background: var(--gold); }
+.student-login .card-eyebrow { margin-bottom: 8px; color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: 1.7px; text-transform: uppercase; }
+.student-login .login-card h2 { font-size: clamp(25px, 2.1vw, 36px); font-weight: 800; letter-spacing: -1.25px; line-height: 1.25; }
+.student-login .card-intro { margin-top: 14px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.student-login .login-fields { margin-top: 28px; }
+.student-login .login-role-picker { min-width: 0; margin: 0 0 22px; padding: 0; border: 0; }
+.student-login .login-role-picker legend { margin-bottom: 8px; padding: 0; color: #3c4d41; font-size: 13px; font-weight: 650; }
+.student-login .login-role-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 12px; background: #f2f7f3; }
+.student-login .login-role-option { position: relative; min-width: 0; cursor: pointer; }
+.student-login .login-role-option input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
+.student-login .login-role-option span { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 9px 5px; border-radius: 8px; color: #52675a; font-size: 13px; font-weight: 700; transition: background .15s, color .15s; }
+.student-login .login-role-option:hover span { background: #e3eee6; color: var(--deep-green); }
+.student-login .login-role-option input:checked + span { background: var(--green); color: white; box-shadow: 0 3px 8px #07563820; }
+.student-login .login-role-option input:focus-visible + span { outline: 3px solid var(--deep-green); outline-offset: 3px; }
+
+.student-login .form-field + .form-field { margin-top: 19px; }
+.student-login .form-field label { display: block; margin-bottom: 7px; color: #3c4d41; font-size: 13px; font-weight: 650; }
+.student-login .input-wrap { position: relative; }
+.student-login .form-field input { width: 100%; min-width: 0; height: 56px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 11px; color: var(--ink); background: #fbfdfb; font-size: 16px; transition: border-color .15s, box-shadow .15s; }
+.student-login .form-field input::placeholder { color: #65766b; opacity: 1; }
+.student-login .input-wrap input { padding-left: 47px; }
+.student-login #login-password { padding-right: 52px; }
+.student-login .form-field input:focus { border-color: var(--green); outline: 2px solid #087a4b30; outline-offset: 2px; background: white; }
+.student-login .field-icon { position: absolute; top: 18px; left: 17px; width: 19px; height: 19px; color: #7c9081; pointer-events: none; }
+.student-login .password-toggle { position: absolute; top: 6px; right: 5px; display: grid; place-items: center; width: 44px; height: 44px; padding: 11px; border: 0; border-radius: 7px; background: transparent; color: #6b7e70; }
+.student-login .password-toggle:hover { background: #edf5ef; color: var(--green); }
+.student-login .password-toggle svg { width: 21px; height: 21px; }
+.student-login .eye-slash { display: none; }
+.student-login .password-toggle[aria-pressed="true"] .eye-slash { display: block; }
+.student-login .form-options { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 12px; margin-top: 15px; }
+.student-login .remember-option { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; color: #57695d; font-size: 13px; cursor: pointer; }
+.student-login .remember-option input { width: 18px; height: 18px; margin: 0; accent-color: var(--green); cursor: pointer; }
+.student-login .text-button { min-height: 44px; padding: 8px 0; border: 0; background: transparent; color: var(--green); font-size: 13px; font-weight: 700; }
+.student-login .text-button:hover, .student-login .office-help summary:hover { text-decoration: underline; text-underline-offset: 4px; }
+.student-login .field-hint { color: var(--muted); font-size: 11px; line-height: 1.6; }
+.student-login #remember-status:empty { display: none; }
+.student-login #remember-status:not(:empty) { margin-top: 5px; }
+.student-login .login-button { display: flex; align-items: center; justify-content: center; gap: 16px; width: 100%; min-height: 56px; margin-top: 23px; padding: 13px 20px; border: 0; border-radius: 11px; background: var(--green); color: white; font-size: 15px; font-weight: 750; box-shadow: 0 8px 20px #087a4b20; transition: background .15s, transform .15s; }
+.student-login .login-button:hover { background: var(--deep-green); transform: translateY(-1px); }
+.student-login .login-button:active { transform: translateY(0); }
+.student-login .security-note { display: flex; align-items: flex-start; justify-content: center; gap: 8px; margin-top: 20px; color: #67796c; font-size: 11px; text-align: center; }
+.student-login .security-note svg { flex: 0 0 auto; width: 15px; height: 17px; color: var(--green); }
+.student-login .card-footer { margin-top: 27px; padding-top: 20px; border-top: 1px solid #e9efea; color: var(--muted); font-size: 12px; text-align: center; }
+.student-login .office-help { display: inline; }
+.student-login .office-help summary { display: inline-block; color: var(--green); font-weight: 700; cursor: pointer; list-style: none; }
+.student-login .office-help summary::-webkit-details-marker { display: none; }
+.student-login .office-help[open] summary { text-decoration: underline; text-underline-offset: 4px; }
+.student-login .office-help-content { margin-top: 12px; padding: 14px; border-radius: 10px; background: #f2f7f3; text-align: left; }
+.student-login .office-help-content p + p { margin-top: 10px; }
+.student-login .login-alert { margin-top: 22px; padding: 12px 14px; border: 1px solid #e7b9ad; border-radius: 9px; background: #fff3ef; color: #943b29; font-size: 13px; }
+.student-login .recovery-dialog { width: min(460px, calc(100% - 32px)); max-height: calc(100svh - 32px); margin: auto; padding: 0; overflow-y: auto; border: 1px solid #e0e9e2; border-radius: 22px; background: white; color: var(--ink); box-shadow: 0 25px 100px #002d2940; }
+.student-login .recovery-dialog::backdrop { background: #092e23a6; backdrop-filter: blur(4px); }
+.student-login .recovery-content { position: relative; padding: 36px; }
+.student-login .dialog-close { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: #52675a; font-size: 28px; line-height: 1; }
+.student-login .dialog-close:hover { background: #edf5ef; }
+.student-login .recovery-icon { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 22px; border-radius: 14px; background: #eaf4ed; color: var(--green); }
+.student-login .recovery-icon svg { width: 24px; height: 24px; }
+.student-login .recovery-content h2 { font-size: 27px; line-height: 1.3; letter-spacing: -.8px; }
+.student-login #recovery-intro { margin-top: 13px; color: var(--muted); font-size: 14px; }
+.student-login #recovery-form { margin-top: 24px; }
+.student-login .recovery-confirmation { margin-top: 24px; padding: 18px; border: 1px solid #d3e6d8; border-radius: 12px; background: #f0f7f2; font-size: 14px; overflow-wrap: anywhere; }
+.student-login .confirmation-title { color: var(--deep-green); font-weight: 750; }
+.student-login .recovery-confirmation p + p { margin-top: 10px; }
+.student-login .office-link { display: inline-flex; align-items: center; min-height: 44px; gap: 8px; margin-top: 8px; font-weight: 650; }
+.student-login.modal-open { overflow: hidden; }
+@media (min-width: 901px) and (max-width: 1200px) {
+    .student-login .welcome-panel { padding-inline: 36px; }
+    .student-login .login-panel { padding-inline: 28px; }
+    .student-login .school-identity { gap: 15px; }
+    .student-login .school-location { font-size: 10px; letter-spacing: 1px; }
+}
+@media (max-width: 900px) {
+    .student-login .portal-header { padding: 15px 24px; }
+    .student-login .portal-nav { gap: 20px; }
+    .student-login .portal-layout { grid-template-columns: 1fr; }
+    .student-login .login-panel { grid-row: 1; padding: 40px 24px; }
+    .student-login .login-card { max-width: 510px; padding-inline: 36px; }
+    .student-login .login-card h2 { font-size: 32px; }
+    .student-login .welcome-panel { padding: 40px 32px; }
+    .student-login .welcome-content { max-width: 650px; }
+    .student-login .school-identity { margin-bottom: 28px; }
+    .student-login .school-seal--hero { width: 72px; height: 72px; }
+    .student-login .welcome-message h1 { font-size: 46px; }
+    .student-login .welcome-description { margin-top: 20px; font-size: 16px; }
+    .student-login .portal-features { margin-top: 24px; }
+    .student-login .welcome-footer { margin-top: 28px; }
+}
+@media (max-width: 600px) {
+    .student-login .portal-header { flex-direction: column; align-items: stretch; gap: 13px; padding: 16px 20px 12px; }
+    .student-login .portal-brand { gap: 11px; }
+    .student-login .portal-brand strong { font-size: 18px; }
+    .student-login .school-seal--nav { width: 46px; height: 46px; }
+    .student-login .brand-caption { font-size: 10px; }
+    .student-login .portal-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+    .student-login .portal-nav a { font-size: 12px; }
+    .student-login .portal-nav .nav-login { gap: 7px; padding: 8px; border-radius: 8px; }
+    .student-login .login-panel { padding: 27px 16px 32px; }
+    .student-login .login-card { padding: 30px 23px 24px; border-radius: 19px; }
+    .student-login .login-card::before { left: 24px; width: 64px; }
+    .student-login .login-card h2 { font-size: 27px; letter-spacing: -1px; }
+    .student-login .card-intro { font-size: 13px; }
+    .student-login .login-fields { margin-top: 23px; }
+    .student-login .form-options { column-gap: 8px; }
+    .student-login .remember-option, .student-login .text-button { font-size: 12px; }
+    .student-login .security-note { font-size: 10px; }
+    .student-login .card-footer > span { display: block; }
+    .student-login .welcome-panel { padding: 34px 24px; }
+    .student-login .school-name { font-size: 20px; }
+    .student-login .school-location { font-size: 10px; }
+    .student-login .welcome-message h1 { font-size: clamp(36px, 8.7vw, 46px); }
+    .student-login .portal-features { gap: 8px; }
+    .student-login .portal-features li { font-size: 11px; padding: 8px 11px; }
+    .student-login .recovery-content { padding: 30px 24px; }
+    .student-login .recovery-content h2 { font-size: 25px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .student-login *, .student-login *::before, .student-login *::after { transition: none !important; }
+}
+
+/* Two faces share one grid cell so the card retains the taller form's height. */
+.student-login .auth-card { width: 100%; max-width: 520px; perspective: 1800px; }
+.student-login .auth-card-inner { display: grid; grid-template-columns: minmax(0, 1fr); transform-style: preserve-3d; transition: transform .62s cubic-bezier(.22, .61, .36, 1); }
+.student-login .auth-card.is-registering .auth-card-inner { transform: rotateY(-180deg); }
+.student-login .auth-face { grid-area: 1 / 1; min-width: 0; align-self: stretch; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.student-login .auth-face[inert] { pointer-events: none; user-select: none; }
+.student-login .auth-face--register { display: flex; flex-direction: column; transform: rotateY(180deg); }
+.student-login .login-form-controls, .student-login .registration-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
+.student-login .registration-form { margin-top: 28px; }
+.student-login #registration-password { padding-right: 52px; }
+.student-login .registration-number-hint { margin-top: 7px; }
+.student-login .registration-note { margin-top: 15px; color: var(--muted); font-size: 11px; line-height: 1.7; text-align: center; }
+.student-login .auth-switch { margin-top: 16px; color: var(--muted); font-size: 12px; text-align: center; }
+.student-login .auth-switch .text-button { padding: 8px 3px; }
+.student-login .registration-switch { margin-top: auto; padding-top: 16px; }
+.student-login .registration-status { margin-top: 16px; padding: 12px 14px; border: 1px solid #d3e6d8; border-radius: 10px; color: #355442; background: #f0f7f2; font-size: 13px; line-height: 1.7; }
+@media (max-width: 900px) {
+    .student-login .auth-card { max-width: 510px; }
+}
+@media (max-width: 600px) {
+    .student-login .registration-form { margin-top: 23px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .student-login .auth-card-inner { transition: none; }
+}
+
