@@ -1,177 +1,170 @@
 <?php
 session_start();
-
-if (!isset($_SESSION['username']) || $_SESSION['usertype'] !== 'student') {
-    header("location: login.php");
-    exit();
+require_once __DIR__ . '/subject_support.php';
+require_once __DIR__ . '/student_ui.php';
+if (!isset($_SESSION['username'], $_SESSION['usertype']) || $_SESSION['usertype'] !== 'student') {
+    header('Location: login.php');
+    exit;
 }
-
-$host = "localhost";
-$user = "root";
-$password = "";
-$db = "althea_database";
-
-$data = mysqli_connect($host, $user, $password, $db);
-
-if ($data === false) {
-    die("Connection error");
+try {
+    $data = kns_subject_db();
+    $student = kns_subject_student($data);
+    if (!$student) {
+        http_response_code(403);
+        exit('Your student account could not be verified.');
+    }
+    $subjects = $data->query('SELECT id, subject_name, instructor, description FROM subjects ORDER BY id')->fetch_all(MYSQLI_ASSOC);
+    $enrollmentRows = [];
+    if (kns_subject_schema_ready($data)) {
+        $query = $data->prepare('SELECT subject_id, section, academic_year, semester FROM subject_enrollments WHERE student_id = ? AND is_active = 1');
+        $query->bind_param('i', $student['id']);
+        $query->execute();
+        $enrollmentRows = $query->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+} catch (Throwable $error) {
+    error_log('[student-dashboard] ' . $error->getMessage());
+    http_response_code(503);
+    exit('The student portal is temporarily unavailable. Please try again later.');
+}
+$bySubject = [];
+$choices = ['academic_year' => [], 'section' => [], 'semester' => []];
+$terms = [];
+foreach ($enrollmentRows as $row) {
+    $bySubject[$row['subject_id']][] = $row;
+    foreach ($choices as $field => $values) {
+        if ($row[$field] !== '') $choices[$field][$row[$field]] = $row[$field];
+    }
+    $terms[$row['academic_year'] . ' · ' . $row['semester']] = true;
+}
+foreach ($choices as &$values) { $values = array_values($values); sort($values); }
+unset($values);
+$view = ($_GET['view'] ?? '') === 'subjects' ? 'subjects' : 'dashboard';
+$hasEnrollments = count($bySubject) > 0;
+$termLabel = count($terms) === 1 ? array_key_first($terms) : (count($terms) > 1 ? 'Multiple enrolled terms' : 'Term not linked');
+$subjectData = [];
+foreach ($subjects as $subject) {
+    $subjectData[] = ['id' => (int) $subject['id'], 'name' => $subject['subject_name'], 'instructor' => $subject['instructor'],
+        'enrollments' => $bySubject[$subject['id']] ?? []];
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - Kolehiyo Ng Subic</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#133e30">
+    <title>Student Portal | Kolehiyo ng Subic</title>
+    <link rel="stylesheet" href="student-portal.css?v=1">
+    <script src="student-portal.js?v=1" defer></script>
 </head>
-<body>
-
-    <div class="sidebar">
+<body class="student-shell" data-current-view="<?= $view ?>">
+    <a href="#student-main" class="ui-skip">Skip to content</a>
+    <aside class="student-sidebar" id="student-sidebar" aria-label="Student menu">
         <div>
-            <h5 class="fw-bold mb-1"><i class="fa-solid fa-graduation-cap me-2"></i>KNS Portal</h5>
-            <small style="color: #b7e4c7;">Student Subject Portal</small>
-            <ul class="sidebar-menu">
-                <li><a href="studenthome.php" class="active"><span><i class="fa-solid fa-house me-2"></i> Dashboard</span></a></li>
-                <li><a href="#subjectsSection"><span><i class="fa-solid fa-book-open me-2"></i> My Subjects</span></a></li>
-            </ul>
+            <div class="sidebar-brand">
+                <span class="brand-mark"><?= kns_ui_icon('cap') ?></span>
+                <span><strong>KNS Portal</strong><small>Student Subject Portal</small></span>
+                <button class="icon-button sidebar-close" type="button" aria-label="Close menu"><?= kns_ui_icon('close') ?></button>
+            </div>
+            <p class="sidebar-caption">Student menu</p>
+            <nav class="student-nav">
+                <a href="studenthome.php" data-student-nav="dashboard" <?= $view === 'dashboard' ? 'aria-current="page"' : '' ?>><?= kns_ui_icon('home') ?><span>Dashboard</span></a>
+                <a href="studenthome.php?view=subjects#subjectsSection" data-student-nav="subjects" <?= $view === 'subjects' ? 'aria-current="page"' : '' ?>><?= kns_ui_icon('book') ?><span>My Subjects</span></a>
+            </nav>
         </div>
-        <div>
-            <div class="border-top border-success pt-3 mb-2 d-flex align-items-center gap-2">
-                <i class="fa-solid fa-user-graduate fs-4 text-success bg-light p-2 rounded-circle"></i>
-                <div>
-                    <h6 class="mb-0 fw-bold text-white"><?php echo htmlspecialchars($_SESSION['username']); ?></h6>
-                    <small style="color: #b7e4c7;">Student Account</small>
-                </div>
-            </div>
-            <a href="logout.php" class="text-danger fw-bold text-decoration-none p-2 d-block"><i class="fa-solid fa-right-from-bracket me-2"></i> Sign Out</a>
+        <div class="sidebar-bottom">
+            <div class="sidebar-account"><span class="account-avatar"><?= kns_subject_escape(mb_strtoupper(mb_substr($student['username'], 0, 2))) ?></span><span><strong><?= kns_subject_escape($student['username']) ?></strong><small>Student Account</small></span></div>
+            <a class="sidebar-signout" href="logout.php"><?= kns_ui_icon('logout') ?>Sign out</a>
         </div>
-    </div>
+    </aside>
+    <button class="sidebar-shade" type="button" aria-label="Close student menu" hidden></button>
+    <main class="student-main" id="student-main" tabindex="-1">
+        <header class="student-heading">
+            <div class="heading-copy">
+                <button class="icon-button menu-toggle" type="button" aria-label="Open student menu" aria-controls="student-sidebar" aria-expanded="false"><?= kns_ui_icon('menu') ?></button>
+                <p class="ui-eyebrow" id="student-eyebrow"><?= $view === 'dashboard' ? 'Student overview' : 'Your classes' ?></p>
+                <h1 id="student-page-title" data-welcome="<?= kns_subject_escape('Welcome back, ' . $student['username']) ?>"><?= $view === 'dashboard' ? kns_subject_escape('Welcome back, ' . $student['username']) : 'My subjects' ?></h1>
+                <p class="heading-description" id="student-page-description"><?= $view === 'dashboard' ? 'Here’s a clear view of your workload and subjects.' : 'Browse your subjects and open a class portal.' ?></p>
+            </div>
+            <div class="heading-actions"><span class="term-pill"><span></span><?= kns_subject_escape($termLabel) ?></span>
+                <details class="student-notifications"><summary class="icon-button" aria-label="Notifications"><?= kns_ui_icon('bell') ?></summary><div>No notifications are available. Notification updates are not connected yet.</div></details>
+            </div>
+        </header>
 
-    <div class="main-content">
-        <div class="top-navbar">
-            <div>
-                <h4 class="fw-bold mb-0 text-dark">Student Dashboard & Workload Monitoring</h4>
-                <p class="text-muted small mb-0">Centralized Subject Portal with Activity Tracking</p>
+        <section id="student-overview" <?= $view !== 'dashboard' ? 'hidden' : '' ?> aria-label="Student overview">
+            <div class="student-metrics">
+                <?php foreach ([
+                    ['Total tasks', '—', 'Waiting for instructor records', 'record'],
+                    ['Completed', '—', 'Submission data not connected', 'check'],
+                    ['Remaining', '—', 'Task records not connected', 'clock'],
+                    ['Workload status', 'Not available', 'Connect task records to view status', 'trend']
+                ] as $metric): ?>
+                    <article class="ui-card metric-tile">
+                        <div class="metric-heading"><h2><?= $metric[0] ?></h2><span class="soft-icon"><?= kns_ui_icon($metric[3]) ?></span></div>
+                        <p class="metric-value <?= $metric[0] === 'Workload status' ? 'metric-status' : '' ?>"><?= $metric[1] ?></p>
+                        <p class="metric-caption"><?= $metric[2] ?></p>
+                    </article>
+                <?php endforeach; ?>
             </div>
-            <div>
-                <span class="badge bg-success p-2 px-3 rounded-pill">2025-2026 | 1st Semester</span>
-            </div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="metric-card border-top border-primary border-4">
-                    <h6 class="text-muted fw-bold small">TOTAL TASKS</h6>
-                    <h3 class="fw-bold text-primary mb-0">12</h3>
-                    <small class="text-muted">Assigned across subjects</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="metric-card border-top border-success border-4">
-                    <h6 class="text-muted fw-bold small">COMPLETED</h6>
-                    <h3 class="fw-bold text-success mb-0">8</h3>
-                    <small class="text-muted">Successfully turned in</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="metric-card border-top border-danger border-4">
-                    <h6 class="text-muted fw-bold small">REMAINING</h6>
-                    <h3 class="fw-bold text-danger mb-0">4</h3>
-                    <small class="text-muted">Pending submission</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="metric-card border-top border-warning border-4">
-                    <h6 class="text-muted fw-bold small">WORKLOAD STATUS</h6>
-                    <span class="badge bg-success fs-6 mt-1 px-3">Balanced</span>
-                    <small class="text-muted d-block mt-1">Optimal schedule</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card-custom">
-                    <h5 class="fw-bold text-dark mb-1"><i class="fa-solid fa-chart-column me-2 text-success"></i>Weekly Workload Density Chart</h5>
-                    <p class="text-muted small mb-3">Visualizing task deadlines and effort distribution across the week.</p>
-                    <canvas id="studentWorkloadChart" height="135"></canvas>
-                </div>
-            </div>
-
-            <div class="col-lg-4">
-                <div class="card-custom text-center">
-                    <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-notch me-2 text-primary"></i>Completion Rate</h5>
-                    <div style="width: 140px; margin: 0 auto;">
-                        <canvas id="completionRateChart"></canvas>
+            <div class="student-charts">
+                <section class="ui-card workload-card" aria-labelledby="workload-title">
+                    <div class="panel-heading"><div><h2 id="workload-title">Weekly workload</h2><p>Task activity across the week</p></div><span class="chart-key"><i></i>Workload level</span></div>
+                    <div class="workload-chart" role="img" aria-label="Weekly workload chart unavailable until instructor task records are connected">
+                        <div class="workload-grid"><span></span><span></span><span></span><span></span></div>
+                        <p class="chart-unavailable">Your workload will appear here<br><small>Instructor task records are not connected yet.</small></p>
+                        <div class="chart-days"><?php foreach (['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as $day): ?><span><?= $day ?></span><?php endforeach; ?></div>
                     </div>
-                    <p class="text-muted small mt-3 fw-bold"><b>66% Done</b> - On track with milestones.</p>
-                </div>
+                </section>
+                <section class="ui-card completion-card" aria-labelledby="completion-title">
+                    <div class="panel-heading"><div><h2 id="completion-title">Completion rate</h2><p>Your current term progress</p></div></div>
+                    <div class="completion-ring" role="img" aria-label="Completion rate unavailable"><span><strong>—</strong><small>not available</small></span></div>
+                    <p class="completion-caption">Waiting for submission records</p><p class="completion-note">Your progress will appear when records are connected.</p>
+                </section>
             </div>
-        </div>
+        </section>
 
-        <div id="subjectsSection">
-            <h4 class="fw-bold text-dark mb-3 mt-3"><i class="fa-solid fa-book me-2 text-success"></i>My Enrolled Subjects (Database Live)</h4>
-            <div class="row">
-                <?php
-                $subj_query = "SELECT * FROM subjects";
-                $subj_result = mysqli_query($data, $subj_query);
-
-                if ($subj_result && mysqli_num_rows($subj_result) > 0) {
-                    while($subj = mysqli_fetch_assoc($subj_result)) {
-                        echo '<div class="col-md-4 mb-3">';
-                        echo '<div class="card card-custom h-100 border-start border-success border-4 d-flex flex-column justify-content-between">';
-                        echo '<div class="card-body">';
-                        echo '<h5 class="fw-bold text-dark mb-2">' . htmlspecialchars($subj['subject_name']) . '</h5>';
-                        echo '<p class="text-secondary small mb-1"><i class="fa-solid fa-user-tie me-1"></i> ' . htmlspecialchars($subj['instructor']) . '</p>';
-                        echo '<p class="text-muted small mb-3">' . htmlspecialchars($subj['description']) . '</p>';
-                        echo '</div>';
-                        echo '<div class="card-footer bg-white border-0 pt-0">';
-                        echo '<a href="subjectview.php?id=' . $subj['id'] . '" class="btn btn-sm btn-success w-100 fw-bold"><i class="fa-solid fa-arrow-right me-1"></i> Open Subject Page</a>';
-                        echo '</div>';
-                        echo '</div>';
-                        echo '</div>';
-                    }
-                } else {
-                    echo '<p class="text-muted">No enrolled subjects found in database.</p>';
-                }
-                ?>
+        <section id="subjectsSection" aria-labelledby="subjects-title">
+            <div class="subjects-heading"><div><h2 id="subjects-title"><?= $view === 'subjects' ? 'Your current classes' : ($hasEnrollments ? 'My enrolled subjects' : 'My subjects') ?></h2><p id="subjects-description"><?= $view === 'subjects' ? 'Open a subject to view its portal page.' : 'Quick access to your subject portals' ?></p></div>
+                <a class="view-all" href="studenthome.php?view=subjects#subjectsSection" data-student-nav="subjects" <?= $view === 'subjects' ? 'hidden' : '' ?>>View all subjects <?= kns_ui_icon('arrow') ?></a>
+                <span class="subject-count-badge" id="subject-count-badge" <?= $view !== 'subjects' ? 'hidden' : '' ?>><?= count($subjects) ?> subjects</span>
             </div>
-        </div>
-    </div>
-
-    <script>
-        const ctxWorkload = document.getElementById('studentWorkloadChart').getContext('2d');
-        new Chart(ctxWorkload, {
-            type: 'bar',
-            data: {
-                labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-                datasets: [{
-                    label: 'Task Effort / Workload Level',
-                    data: [35, 22, 40, 60, 28, 48, 40],
-                    backgroundColor: 'rgba(40, 167, 69, 0.7)',
-                    borderColor: 'rgba(40, 167, 69, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true, max: 80 } }
-            }
-        });
-
-        const ctxCompletion = document.getElementById('completionRateChart').getContext('2d');
-        new Chart(ctxCompletion, {
-            type: 'doughnut',
-            data: {
-                labels: ['Done', 'Remaining'],
-                datasets: [{ data: [66, 34], backgroundColor: ['#1b4332', '#e9ecef'] }]
-            },
-            options: { responsive: true, plugins: { legend: { display: false } } }
-        });
-    </script>
+            <div id="subject-tools" <?= $view !== 'subjects' ? 'hidden' : '' ?>>
+                <div class="subject-search-row"><label class="subject-search" for="subject-search"><?= kns_ui_icon('search') ?><input type="search" id="subject-search" placeholder="Search by subject or professor" autocomplete="off"></label><p id="subject-results-count" role="status" aria-live="polite">Showing <?= count($subjects) ?> of <?= count($subjects) ?> subjects</p></div>
+                <section class="ui-card subject-filter-panel" aria-labelledby="subject-filter-title">
+                    <div class="filter-panel-heading"><span class="soft-icon"><?= kns_ui_icon('filter') ?></span><div><h3 id="subject-filter-title">Filter subjects</h3><p>Narrow your list by academic year, course, section, or semester.</p></div></div>
+                    <div class="subject-filter-grid">
+                        <?php foreach (['academic_year' => ['Academic year', 'All academic years'], 'course' => ['Course', 'All courses'], 'section' => ['Section', 'All sections'], 'semester' => ['Semester', 'All semesters']] as $field => $labels): ?>
+                            <label><?= $labels[0] ?><select data-subject-filter="<?= $field ?>" <?= empty($choices[$field]) ? 'disabled title="No verified records for this filter yet."' : '' ?>><option value=""><?= $labels[1] ?></option>
+                                <?php foreach ($choices[$field] ?? [] as $choice): ?><option value="<?= kns_subject_escape($choice) ?>"><?= kns_subject_escape($choice) ?></option><?php endforeach; ?>
+                            </select></label>
+                        <?php endforeach; ?>
+                    </div>
+                    <p class="filter-hint">Filter choices come from your verified enrollment records. Course data is not available yet.</p>
+                </section>
+            </div>
+            <?php if (!$hasEnrollments): ?><p class="catalog-note">Enrollment verification is pending. These are the subjects available in the portal.</p><?php endif; ?>
+            <div class="subject-grid" id="subject-grid">
+                <?php foreach ($subjects as $index => $subject): ?>
+                    <article class="ui-card subject-card" data-subject-id="<?= (int) $subject['id'] ?>" <?= $view === 'dashboard' && $index >= 3 ? 'hidden' : '' ?>>
+                        <div class="subject-card-top"><span class="soft-icon"><?= kns_ui_icon('record') ?></span><span class="subject-status"><?= isset($bySubject[$subject['id']]) ? 'Enrolled' : 'Subject' ?></span></div>
+                        <h3><?= kns_subject_escape($subject['subject_name']) ?></h3>
+                        <p class="subject-professor"><?= kns_ui_icon('user') ?><?= kns_subject_escape($subject['instructor']) ?></p>
+                        <p class="subject-description"><?= kns_subject_escape($subject['description']) ?></p>
+                        <div class="subject-card-actions">
+                            <a href="subjectview.php?id=<?= (int) $subject['id'] ?>" class="subject-open" data-subject-open="classroom">Open subject page <?= kns_ui_icon('arrow') ?></a>
+                            <a href="subjectview.php?id=<?= (int) $subject['id'] ?>&amp;view=message" class="subject-message-open" data-subject-open="message"><?= kns_ui_icon('chat') ?>Message</a>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+            <div class="ui-card subject-search-empty" id="subject-search-empty" <?= $subjects ? 'hidden' : '' ?>><span class="soft-icon"><?= kns_ui_icon('search') ?></span><h3>No subjects found</h3><p>Try a different search or change your filters.</p><button type="button" id="reset-subject-filters">Clear search and filters</button></div>
+        </section>
+    </main>
+    <dialog class="subject-dialog" id="subject-dialog" aria-label="Subject classroom">
+        <button class="icon-button subject-dialog-close" type="button" aria-label="Close subject panel"><?= kns_ui_icon('close') ?></button>
+        <p class="subject-dialog-loading" role="status">Loading subject…</p>
+        <iframe id="subject-dialog-frame" title="Subject classroom" src="about:blank"></iframe>
+    </dialog>
+    <script type="application/json" id="student-subject-data"><?= json_encode($subjectData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 </body>
 </html>
