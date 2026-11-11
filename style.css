@@ -1,0 +1,197 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #f4f6f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.body_deg {
+    background-image: url('kns school.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center bottom;
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.overlay_container {
+    width: 100vw;
+    min-height: 100vh;
+    background: rgba(30, 110, 50, 0.35); 
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.main_container {
+    width: 900px;
+    max-width: 1000px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand_section {
+    width: 380px;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    text-align: center;
+}
+
+.logo_img {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 4px solid white;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    background-image: url('logo.jpg');
+    background-size: 350%; 
+    background-position: center;
+}
+
+.brand_title {
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.brand_subtitle {
+    font-size: 13px;
+    letter-spacing: 1px;
+    margin-top: 5px;
+}
+
+.login_form {
+    width: 400px;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 40px 35px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.title_deg {
+    color: white;
+    font-size: 24px;
+    margin-bottom: 25px;
+    letter-spacing: 1px;
+}
+
+.input_deg {
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.input_deg input {
+    width: 100%;
+    padding: 12px 18px;
+    border-radius: 25px; 
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+    outline: none;
+    font-size: 14px;
+}
+
+.btn_login {
+    width: 100%;
+    padding: 12px;
+    border-radius: 25px;
+    border: none;
+    background-color: #2e7d32;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+.btn_login:hover {
+    background-color: #1b5e20;
+}
+
+/* Dashboard & Portal Layout Styles */
+.sidebar {
+    width: 260px;
+    background: #1b4332;
+    color: white;
+    padding: 25px 20px;
+    position: fixed;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin-top: 30px;
+}
+
+.sidebar-menu li {
+    margin-bottom: 15px;
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    color: #d8f3dc;
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: 0.3s;
+}
+
+.sidebar-menu a:hover, .sidebar-menu a.active {
+    background-color: #2d6a4f;
+    color: white;
+}
+
+.main-content {
+    margin-left: 260px;
+    flex: 1;
+    padding: 30px;
+}
+
+.top-navbar {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    margin-bottom: 25px;
+    border: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.metric-card, .card-custom {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    border: 1px solid #eaeaea;
+}
