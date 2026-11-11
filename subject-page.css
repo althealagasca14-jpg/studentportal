@@ -1,0 +1,113 @@
+/* Scoped additions for the existing subject content and private composer. */
+.subject-work-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+.subject-work-filter { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 8px 13px; border: 1px solid #d9e5dc; border-radius: 9px; background: white; color: #31513d; font: inherit; font-size: 13px; font-weight: 600; }
+.subject-work-filter[aria-pressed="true"] { border-color: #087a4b; background: #087a4b; color: white; }
+.subject-work-filter:hover { border-color: #087a4b; }
+.subject-work-filter span { min-width: 20px; padding: 0 5px; border-radius: 5px; background: #e7f1e9; color: #285638; font-size: 12px; text-align: center; }
+.subject-work-filter[aria-pressed="true"] span { background: #ffffff26; color: white; }
+.subject-work-empty { padding: 30px 20px; border: 1px dashed #cbded1; border-radius: 12px; background: #f5f9f6; text-align: center; }
+.subject-work-empty h3 { font-size: 17px; font-weight: 700; }
+.subject-work-empty p { max-width: 520px; margin: 10px auto 0; color: #596e61; font-size: 14px; line-height: 1.7; }
+.subject-context { color: #566b5d; font-size: 13px; }
+.subject-message-form fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.subject-message-form textarea { resize: vertical; }
+.subject-attach-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 8px; }
+.subject-attach-picker { position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 8px 12px; border: 1px solid #b7cebf; border-radius: 8px; background: #f6faf7; color: #075638; font-size: 13px; font-weight: 650; cursor: pointer; }
+.subject-attach-picker input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.subject-attach-picker:hover { border-color: #087a4b; background: #eaf4ee; }
+.subject-attach-picker:focus-within { outline: 3px solid #087a4b; outline-offset: 3px; }
+.subject-attachment-help, .subject-attachment-count { color: #5b6d61; font-size: 12px; line-height: 1.6; }
+.subject-attachment-count { margin-top: 5px; }
+.subject-attachment-error { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #fff1ec; color: #873c29; font-size: 13px; }
+.subject-attachment-error:empty { display: none; }
+.subject-selected-attachments { display: grid; gap: 9px; margin: 12px 0 16px; padding: 0; list-style: none; }
+.subject-selected-attachment { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px; border: 1px solid #dde7df; border-radius: 9px; background: #fcfdfc; }
+.subject-selected-attachment img { flex: 0 0 auto; width: 54px; height: 54px; border-radius: 6px; object-fit: cover; }
+.subject-selected-file-icon { display: grid; flex: 0 0 auto; place-items: center; width: 42px; height: 48px; border-radius: 7px; background: #e7f0ea; color: #075638; font-size: 11px; font-weight: 700; }
+.subject-selected-file-info { flex: 1; min-width: 0; }
+.subject-selected-file-info strong { display: block; overflow-wrap: anywhere; color: #253e2e; font-size: 12px; }
+.subject-selected-file-info small { color: #63756a; font-size: 11px; }
+.subject-remove-attachment { flex: 0 0 auto; min-width: 44px; min-height: 44px; padding: 7px; border: 0; border-radius: 7px; background: transparent; color: #8b3a2b; font-size: 12px; font-weight: 600; }
+.subject-remove-attachment:hover { background: #fff0eb; }
+.subject-conversation { margin-top: 25px; }
+.subject-conversation-list { display: grid; gap: 14px; margin: 16px 0 0; padding: 0; list-style: none; }
+.subject-message { min-width: 0; padding: 15px; border: 1px solid #dce7df; border-radius: 12px; background: #f8fbf9; }
+.subject-message-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin-bottom: 9px; font-size: 12px; }
+.subject-message-header time { color: #65766b; font-size: 11px; }
+.subject-message-topic { margin-bottom: 8px; color: #42604c; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.subject-message-text { color: #263c2e; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; white-space: pre-wrap; }
+.subject-message-attachments { display: grid; gap: 9px; margin-top: 12px; }
+.subject-message-attachment { display: block; min-width: 0; padding: 9px; border: 1px solid #d7e4db; border-radius: 9px; background: white; color: #075638; text-decoration: none; }
+.subject-message-attachment:hover { border-color: #087a4b; background: #f2f8f4; }
+.subject-message-attachment img { display: block; width: 100%; max-height: 180px; margin-bottom: 8px; border-radius: 5px; object-fit: cover; }
+.subject-message-attachment strong { display: block; overflow-wrap: anywhere; font-size: 12px; }
+.subject-message-attachment small { display: block; color: #63756a; font-size: 11px; }
+.subject-work-filter:focus-visible, .subject-remove-attachment:focus-visible, .subject-message-attachment:focus-visible { outline: 3px solid #087a4b; outline-offset: 3px; }
+.subject-message-form [hidden] { display: none !important; }
+/* Classroom and conversation presentation shared with the student modal host. */
+.subject-shell .visually-hidden { position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.subject-shell .classroom-work-heading { display:flex; align-items:center; justify-content:space-between; gap:15px; }
+.subject-shell .classroom-work-heading h2 { font-size:20px; font-weight:800; letter-spacing:-.5px; }
+.subject-shell .classroom-work-heading p { color:#86938a; font-size:13px; }
+.subject-shell .subject-context { margin-top:12px; color:#738378; font-size:12px; }
+.subject-shell .subject-work-filters { gap:8px; margin:17px 0 20px; }
+.subject-shell .subject-work-filter { min-height:40px; padding:9px 13px; border-radius:24px; font-size:11px; }
+.subject-shell .subject-work-filter span { min-width:auto; padding:0; background:transparent; color:inherit; }
+.subject-shell .subject-work-empty { padding:45px 24px; border-style:solid; border-color:#e2ece5; background:#fafcfb; box-shadow:0 8px 20px #173f2903; }
+.subject-shell .subject-work-empty h3 { margin-top:16px; font-size:17px; }
+.subject-shell .subject-work-empty p { color:#7c8b81; font-size:13px; }
+.subject-shell .subject-notice { margin:0 0 18px; padding:11px 15px; border:1px solid #e5d9b3; border-radius:10px; background:#fffbf0; color:#856d31; font-size:12px; }
+.subject-shell .subject-notice.success { border-color:#cce3d4; background:#eff8f2; color:#38694c; }
+.subject-shell .subject-notice.danger { border-color:#ebc4b9; background:#fff3ef; color:#923c2a; }
+.subject-shell .enrollment-picker { flex:0 0 auto; margin:0; padding:12px 32px; border-bottom:1px solid #e6eeea; background:#fbfdfc; }
+.subject-shell .enrollment-picker label { display:block; margin-bottom:5px; color:#708176; font-size:11px; font-weight:700; }
+.subject-shell .enrollment-picker > div { display:flex; gap:8px; }
+.subject-shell .enrollment-picker select, .subject-shell .enrollment-picker button { min-width:0; min-height:38px; padding:7px 10px; border:1px solid #d5e5da; border-radius:9px; background:white; color:#35714f; font-size:12px; }
+.subject-shell .enrollment-picker select { flex:1; }
+.subject-shell .message-professor { display:flex; flex:0 0 auto; align-items:center; gap:13px; padding:16px 27px; border-bottom:1px solid #e7eeea; }
+.subject-shell .message-professor strong { font-size:13px; font-weight:750; }
+.subject-shell .message-professor p { color:#859289; font-size:12px; }
+.subject-shell .message-panel { display:flex; flex:1; flex-direction:column; min-height:0; }
+.subject-shell[data-subject-mode="message"]:not([data-embedded="true"]) { display:flex; flex-direction:column; max-width:760px; min-height:100dvh; margin:auto; border-inline:1px solid #e3ece6; }
+.subject-shell .message-thread { display:flex; flex:1; flex-direction:column; min-height:220px; margin:0; padding:20px 25px; overflow:auto; overscroll-behavior:contain; background:#f6faf7; }
+.subject-shell .thread-empty { display:flex; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:24px 12px; text-align:center; }
+.subject-shell .thread-empty-icon { display:grid; place-items:center; width:52px; height:52px; margin-bottom:12px; border-radius:17px; background:#e9f5ed; color:#148858; }
+.subject-shell .thread-empty-icon .ui-icon { width:25px; height:25px; }
+.subject-shell .thread-empty h3 { color:#51695a; font-size:14px; font-weight:700; }
+.subject-shell .thread-empty p { max-width:380px; margin-top:4px; color:#83968a; font-size:12px; }
+.subject-shell .subject-conversation-list { width:100%; margin:0; gap:13px; }
+.subject-shell .subject-message { width:min(88%,450px); margin-left:auto; border-color:#cde4d5; background:#eaf6ee; }
+.subject-shell .message-composer { flex:0 0 auto; padding:12px 23px 14px; border-top:1px solid #e7eeea; background:white; }
+.subject-shell .message-access-note { margin-bottom:5px; color:#8f7c43; font-size:11px; line-height:1.5; }
+.subject-shell .message-topic { margin-bottom:5px; color:#72877a; font-size:11px; }
+.subject-shell .message-topic summary { width:fit-content; max-width:100%; overflow-wrap:anywhere; cursor:pointer; }
+.subject-shell .message-topic label { display:block; margin-top:7px; font-weight:650; }
+.subject-shell .message-topic input { width:100%; margin:5px 0; padding:8px 10px; border:1px solid #d7e5dd; border-radius:8px; color:#3e624e; background:#fcfefd; font-size:13px; }
+.subject-shell .message-compose-row { display:flex; align-items:flex-end; gap:9px; }
+.subject-shell .subject-attach-controls { flex:0 0 auto; gap:6px; margin:0; padding:0 0 2px; }
+.subject-shell .subject-attach-picker { width:40px; height:40px; min-height:40px; padding:9px; border-color:#dce7df; border-radius:12px; background:white; color:#6a8271; }
+.subject-shell .subject-attach-picker .ui-icon { width:19px; height:19px; }
+.subject-shell #subject-message { flex:1; min-width:0; min-height:64px; max-height:150px; padding:11px 13px; border:1px solid #c8dbd0; border-radius:14px; outline-offset:2px; color:#385643; background:white; resize:vertical; font-size:13px; line-height:1.6; }
+.subject-shell #subject-message::placeholder { color:#8a9b8f; }
+.subject-shell .message-send { display:grid; flex:0 0 auto; place-items:center; width:49px; height:49px; padding:12px; border:0; border-radius:15px; background:#138252; color:white; }
+.subject-shell .message-send .ui-icon { width:24px; height:24px; }
+.subject-shell .message-send:hover:not(:disabled) { background:#09603d; }
+.subject-shell .message-compose-help { display:flex; justify-content:space-between; gap:10px; margin-top:6px; color:#85958a; font-size:10px; }
+.subject-shell .subject-attachment-count { margin:4px 0 0; font-size:10px; color:#81958a; }
+.subject-shell .subject-selected-attachments { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; margin:8px 0; }
+.subject-shell .subject-selected-attachments:empty { display:none; }
+.subject-shell .subject-selected-attachment { flex-wrap:wrap; gap:5px; padding:8px; }
+.subject-shell .subject-selected-attachment img { width:42px; height:42px; }
+.subject-shell .subject-selected-file-icon { width:32px; height:38px; font-size:9px; }
+.subject-shell .subject-selected-file-info strong { font-size:10px; }
+.subject-shell .subject-selected-file-info small { font-size:9px; }
+.subject-shell .subject-remove-attachment { min-height:28px; min-width:0; padding:3px; font-size:10px; }
+.subject-shell .message-composer .subject-notice { margin-bottom:8px; font-size:11px; }
+@media (max-width:540px) {
+ .subject-shell .classroom-work-heading { align-items:flex-start; } .subject-shell .classroom-work-heading h2 { font-size:18px; } .subject-shell .subject-work-filters { gap:6px; } .subject-shell .subject-work-filter { padding:8px 10px; font-size:10px; }
+ .subject-shell .message-professor { padding:14px 18px; } .subject-shell .message-composer { padding:11px 13px 13px; } .subject-shell .message-thread { padding:15px; min-height:100px; } .subject-shell .enrollment-picker { padding:10px 16px; } .subject-shell .message-compose-row { flex-wrap:wrap; gap:8px; } .subject-shell .subject-attach-controls { order:2; } .subject-shell #subject-message { flex:1 0 calc(100% - 60px); } .subject-shell .message-send { width:44px; height:44px; } .subject-shell .message-compose-help { font-size:9px; } .subject-shell .subject-selected-attachments { grid-template-columns:repeat(2,minmax(0,1fr)); } .subject-shell .message-access-note { font-size:10px; }
+}
+
+/* Keep every composer control reachable when attachments or a short viewport reduce thread space. */
+.subject-shell[data-embedded="true"] .message-thread { min-height:0; }
+.subject-shell[data-embedded="true"] .message-composer { min-height:0; max-height:75%; overflow:auto; overscroll-behavior:contain; }
