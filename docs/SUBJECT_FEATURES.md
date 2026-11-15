@@ -17,7 +17,7 @@ historical rows are automatically reassigned.
 
 ## Additive database migration
 
-Run `subject_features.sql` against `althea_database` once. It creates:
+Run `database/migrations/001_subject_features.sql` against `althea_database` once. It creates:
 
 - `subject_enrollments`: verified student ID, subject ID, section, academic
   year, semester, and active flag. The user and subject IDs reference existing
@@ -99,8 +99,8 @@ claim that an email, notification, or professor delivery receipt was sent.
 
 ## Scope and verification
 
-Only `subjectview.php` changes an existing page. `subject_support.php`,
-`subject_attachment.php`, `subject-page.css`, and `subject-page.js` implement
+Only `subjectview.php` changes an existing page. `app/helpers/subject_support.php`,
+`subject_attachment.php`, `assets/css/subject-page.css`, and `assets/js/subject-page.js` implement
 the scoped features. The login, dashboards, shared styles, navigation,
 existing subject buttons, and Git configuration remain untouched.
 

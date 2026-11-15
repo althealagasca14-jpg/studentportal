@@ -34,8 +34,19 @@
                 work.querySelectorAll("[data-work-filter]").forEach((filter) => {
                     filter.setAttribute("aria-pressed", String(filter === button));
                 });
-                document.getElementById("subject-work-empty-title").textContent =
-                    categoryNames[button.dataset.workFilter] + " not connected yet";
+                if (work.dataset.classworkConnected === "true") {
+                    let visible = 0;
+                    work.querySelectorAll("[data-classwork-category]").forEach(item => {
+                        item.hidden = button.dataset.workFilter !== "all" && item.dataset.classworkCategory !== button.dataset.workFilter;
+                        if (!item.hidden) visible++;
+                    });
+                    document.getElementById("classwork-empty").hidden = visible > 0;
+                    document.getElementById("subject-work-empty-title").textContent =
+                        "No published " + (button.dataset.workFilter === "all" ? "classwork" : button.dataset.workFilter) + " available";
+                } else {
+                    document.getElementById("subject-work-empty-title").textContent =
+                        categoryNames[button.dataset.workFilter] + " not connected yet";
+                }
             });
         });
     }

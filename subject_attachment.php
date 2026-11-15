@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/subject_support.php';
+require_once __DIR__ . '/app/helpers/subject_support.php';
 
 function kns_attachment_fail(int $status, string $message): never
 {

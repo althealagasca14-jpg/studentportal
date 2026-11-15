@@ -1,7 +1,8 @@
 <?php
 session_start();
-require_once __DIR__ . '/subject_support.php';
-require_once __DIR__ . '/student_ui.php';
+require_once __DIR__ . '/app/helpers/subject_support.php';
+require_once __DIR__ . '/app/helpers/student_ui.php';
+require_once __DIR__ . '/app/classwork/classwork_support.php';
 header('X-Frame-Options: SAMEORIGIN');
 $subject_mode = ($_GET['view'] ?? '') === 'message' ? 'message' : 'classroom';
 $subject_embedded = ($_GET['embed'] ?? '') === '1';
@@ -114,6 +115,36 @@ try {
         }
     }
     $history = $enrollment ? kns_subject_history($data, (int) $enrollment['id']) : ['messages' => [], 'attachments' => []];
+    $classworkReady = false;
+    $classworkItems = [];
+    $classworkNotice = '';
+    $classworkError = '';
+    $classworkCounts = ['all' => 0, 'activities' => 0, 'quizzes' => 0, 'exams' => 0, 'projects' => 0];
+    if ($subject_mode === 'classroom') {
+        try {
+            $classworkReady = kns_classwork_schema_ready($data);
+            if ($classworkReady && $enrollment) {
+                $classworkItems = kns_classwork_for_student($data, $enrollment);
+                foreach ($classworkItems as &$classworkItem) {
+                    $classworkCounts['all']++;
+                    $classworkCounts[$classworkItem['category']]++;
+                    if (!$classworkItem['submitted_at']) {
+                        $classworkItem['answers'] = $_SESSION['classwork_retry'][$enrollment['id']][$classworkItem['id']] ?? [];
+                    }
+                }
+                unset($classworkItem);
+                $classworkNotice = $_SESSION['classwork_notice'][$enrollment['id']] ?? '';
+                $classworkError = $_SESSION['classwork_error'][$enrollment['id']] ?? '';
+                unset($_SESSION['classwork_notice'][$enrollment['id']], $_SESSION['classwork_error'][$enrollment['id']]);
+            }
+        } catch (Throwable $classworkFailure) {
+            error_log('[student-classwork] ' . $classworkFailure->getMessage());
+            $classworkReady = false;
+            $classworkItems = [];
+            $classworkCounts = ['all' => 0, 'activities' => 0, 'quizzes' => 0, 'exams' => 0, 'projects' => 0];
+            $classworkError = 'Classwork is temporarily unavailable. Please try again later.';
+        }
+    }
     $csrf_token = kns_subject_csrf_token();
 } catch (Throwable $error) {
     error_log('[subject-page] ' . $error->getMessage());
@@ -127,9 +158,10 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $subject_mode === 'message' ? 'Private message' : 'Subject classroom' ?> | <?= kns_subject_escape($subject['subject_name']) ?></title>
-    <link rel="stylesheet" href="student-portal.css?v=1">
-    <link rel="stylesheet" href="subject-page.css?v=2">
-    <script src="subject-page.js?v=2" defer></script>
+    <link rel="stylesheet" href="assets/css/student-portal.css?v=1">
+    <link rel="stylesheet" href="assets/css/subject-page.css?v=2">
+    <script src="assets/js/subject-page.js?v=3" defer></script>
+    <?php if ($subject_mode === 'classroom'): ?><link rel="stylesheet" href="assets/css/classwork.css?v=1"><?php endif; ?>
 </head>
 <body class="subject-shell" data-embedded="<?= $subject_embedded ? 'true' : 'false' ?>" data-subject-mode="<?= $subject_mode ?>">
     <header class="subject-head">
@@ -160,19 +192,20 @@ try {
     <main class="subject-content" <?= $subject_mode === 'message' ? 'hidden' : '' ?>>
         <?php if ($access_note): ?><p class="subject-notice" role="status"><?= kns_subject_escape($access_note) ?></p><?php endif; ?>
         <div class="subject-summary">
-            <div><small>Assigned items</small><strong>Not connected</strong></div>
+            <div><small>Assigned items</small><strong><?= $classworkReady ? count($classworkItems) : 'Not connected' ?></strong></div>
             <div><small>Task categories</small><strong>4 types</strong></div>
             <div><small>Instructor</small><strong><?= kns_subject_escape($subject['instructor']) ?></strong></div>
         </div>
-        <section id="subject-work" aria-labelledby="subject-work-title">
-            <div class="classroom-work-heading"><div><h2 id="subject-work-title">Activities &amp; assessments</h2><p>Classwork and requirements for this subject.</p></div><span class="subject-count-badge">0 available items</span></div>
+        <section id="subject-work" aria-labelledby="subject-work-title" data-classwork-connected="<?= $classworkReady ? 'true' : 'false' ?>">
+            <div class="classroom-work-heading"><div><h2 id="subject-work-title">Activities &amp; assessments</h2><p>Classwork and requirements for this subject.</p></div><span class="subject-count-badge"><?= count($classworkItems) ?> available items</span></div>
             <?php if ($enrollment): ?><p class="subject-context">Section <?= kns_subject_escape($enrollment['section']) ?> &middot; <?= kns_subject_escape($enrollment['academic_year']) ?> &middot; <?= kns_subject_escape($enrollment['semester']) ?></p><?php endif; ?>
             <div class="subject-work-filters" role="group" aria-label="Filter subject work">
                 <?php foreach (['all' => 'All', 'activities' => 'Activities', 'quizzes' => 'Quizzes', 'exams' => 'Exams', 'projects' => 'Projects'] as $category => $label): ?>
-                    <button class="subject-work-filter" type="button" data-work-filter="<?= $category ?>" aria-pressed="<?= $category === 'all' ? 'true' : 'false' ?>"><?= $label ?> <span aria-label="0 available items">0</span></button>
+                    <button class="subject-work-filter" type="button" data-work-filter="<?= $category ?>" aria-pressed="<?= $category === 'all' ? 'true' : 'false' ?>"><?= $label ?> <span aria-label="<?= $classworkCounts[$category] ?> available items"><?= $classworkCounts[$category] ?></span></button>
                 <?php endforeach; ?>
             </div>
-            <div class="subject-work-empty" role="status" aria-live="polite"><span class="soft-icon"><?= kns_ui_icon('record') ?></span><h3 id="subject-work-empty-title">Instructor-posted work not connected yet</h3><p>Activities, quizzes, exams, and projects will appear here when the school connects its instructor-posted work records. No assignment or submission data is available in this portal yet.</p></div>
+            <?php require __DIR__ . '/app/views/partials/classwork_student_panel.php'; ?>
+            <div class="subject-work-empty" id="classwork-empty" role="status" aria-live="polite" <?= $classworkItems ? 'hidden' : '' ?>><span class="soft-icon"><?= kns_ui_icon('record') ?></span><h3 id="subject-work-empty-title"><?= $classworkReady ? 'No published classwork available' : 'Instructor-posted work not connected yet' ?></h3><p><?= $classworkReady ? 'Published work for your verified section and term will appear here. Answer and submit directly in this portal.' : 'Activities, quizzes, exams, and projects will appear here when the school connects its instructor-posted work records. No assignment or submission data is available in this portal yet.' ?></p></div>
         </section>
     </main>
 

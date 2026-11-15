@@ -226,8 +226,9 @@ function kns_subject_validate_uploads(array $files): array
 
 function kns_subject_storage_dir(bool $create = false): string
 {
+    $projectRoot = dirname(__DIR__, 2);
     $directory = getenv('KNS_SUBJECT_STORAGE_DIR')
-        ?: dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'studentportal-private' . DIRECTORY_SEPARATOR . 'subject-attachments';
+        ?: dirname($projectRoot, 2) . DIRECTORY_SEPARATOR . 'studentportal-private' . DIRECTORY_SEPARATOR . 'subject-attachments';
     $directory = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $directory);
     if (!preg_match('~^(?:[A-Za-z]:[\\\\/]|/)~', $directory) || preg_match('~(^|[\\\\/])\.\.([\\\\/]|$)~', $directory)) {
         throw new RuntimeException('Invalid private storage configuration.');
@@ -246,7 +247,7 @@ function kns_subject_storage_dir(bool $create = false): string
     if ($suffix) {
         $resolved .= DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, array_reverse($suffix));
     }
-    $publicRoots = [dirname(__DIR__), $_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__)];
+    $publicRoots = [dirname($projectRoot), $_SERVER['DOCUMENT_ROOT'] ?? dirname($projectRoot)];
     foreach ($publicRoots as $root) {
         $public = realpath($root);
         if (!$public) {
