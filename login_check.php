@@ -31,6 +31,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         elseif ($row["usertype"] == "admin") {
             header("location: adminhome.php");
         } 
+        elseif ($row["usertype"] == "professor") {
+            header("location: professorhome.php");
+        }
         else {
             $_SESSION['loginMessage'] = "Invalid user role.";
             header("location: login.php");

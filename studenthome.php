@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once __DIR__ . '/subject_support.php';
-require_once __DIR__ . '/student_ui.php';
+require_once __DIR__ . '/app/helpers/subject_support.php';
+require_once __DIR__ . '/app/helpers/student_ui.php';
 if (!isset($_SESSION['username'], $_SESSION['usertype']) || $_SESSION['usertype'] !== 'student') {
     header('Location: login.php');
     exit;
@@ -54,8 +54,8 @@ foreach ($subjects as $subject) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#133e30">
     <title>Student Portal | Kolehiyo ng Subic</title>
-    <link rel="stylesheet" href="student-portal.css?v=1">
-    <script src="student-portal.js?v=1" defer></script>
+    <link rel="stylesheet" href="assets/css/student-portal.css?v=1">
+    <script src="assets/js/student-portal.js?v=1" defer></script>
 </head>
 <body class="student-shell" data-current-view="<?= $view ?>">
     <a href="#student-main" class="ui-skip">Skip to content</a>

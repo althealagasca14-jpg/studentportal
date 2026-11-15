@@ -1,0 +1,41 @@
+/* Only classwork builders and answer cards; existing shared UI is unchanged. */
+.classwork-page { max-width:1000px; margin:0 auto; padding:30px 24px 60px; }
+.classwork-page h1 { font-size:30px; }
+.classwork-page h2, .cw-student h2 { margin:18px 0 10px; font-size:20px; }
+.classwork-page p, .cw-student p { margin:8px 0; }
+.classwork-page a { color:#087a4b; text-decoration:underline; }
+.cw-form fieldset, .cw-student fieldset { min-width:0; margin:0; padding:0; border:0; }
+.cw-form label, .cw-student label { display:block; margin:12px 0; color:#31513d; font-weight:600; }
+.cw-form input:not([type="checkbox"]), .cw-form textarea, .cw-form select, .cw-student textarea { display:block; width:100%; max-width:100%; margin-top:5px; padding:10px 12px; border:1px solid #c8dbd0; border-radius:9px; background:#fff; color:#24332b; font:inherit; }
+.cw-form textarea, .cw-student textarea { resize:vertical; }
+.cw-form button, .cw-student button { min-height:42px; padding:9px 14px; border:1px solid #b7cebf; border-radius:9px; background:#f0f7f3; color:#075638; font:inherit; cursor:pointer; }
+.cw-form button[value="publish"], .cw-student button[type="submit"] { background:#087a4b; color:white; }
+.cw-card { min-width:0; margin:20px 0; padding:20px; border:1px solid #dfe8e2; border-radius:14px; background:white; overflow-wrap:anywhere; }
+.cw-card h3 { margin:0 0 10px; font-size:17px; }
+.cw-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.cw-choice-row { display:flex; align-items:center; gap:12px; }
+.cw-choice-row label { flex:1; min-width:0; }
+.cw-choice-row button { flex:0 0 auto; }
+.cw-actions { display:flex; flex-wrap:wrap; gap:10px; margin:15px 0; }
+.cw-check { display:flex !important; align-items:flex-start; gap:10px; }
+.cw-check input { margin-top:6px; }
+.cw-notice { margin:15px 0; padding:12px 16px; border:1px solid #e5d9b3; border-radius:9px; background:#fffbf0; color:#79612b; }
+ul.cw-notice { padding-left:32px; }
+.cw-error { color:#923c2a; }
+.cw-error:empty { display:none; }
+.cw-card details { margin:14px 0; }
+.cw-card summary { cursor:pointer; color:#075638; }
+.cw-card pre { max-height:320px; padding:12px; overflow:auto; border:1px solid #e1e9e4; background:#f8fbf9; font:13px/1.6 monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
+.cw-text, .cw-question legend { white-space:pre-wrap; overflow-wrap:anywhere; }
+.cw-student .cw-choice { display:flex; gap:10px; align-items:flex-start; font-weight:400; white-space:pre-wrap; }
+.cw-student .cw-choice input { margin-top:6px; flex:0 0 auto; }
+.cw-student legend { max-width:100%; font-weight:700; }
+.cw-student .cw-question { margin:20px 0; padding-bottom:15px; border-bottom:1px solid #e1e9e4; }
+.cw-student [hidden] { display:none !important; }
+@media (max-width:600px) {
+    .classwork-page { padding:20px 15px; }
+    .cw-row { grid-template-columns:1fr; gap:0; }
+    .cw-card { padding:15px; }
+    .cw-choice-row { flex-wrap:wrap; gap:0; }
+    .cw-choice-row label { flex-basis:100%; }
+}

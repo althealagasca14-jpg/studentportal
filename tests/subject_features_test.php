@@ -4,7 +4,7 @@ if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
 }
-require dirname(__DIR__) . '/subject_support.php';
+require dirname(__DIR__) . '/app/helpers/subject_support.php';
 $root = dirname(__DIR__);
 $source = kns_subject_db();
 $reuseDatabase = getenv('KNS_SUBJECT_TEST_DATABASE') ?: null;
@@ -92,7 +92,7 @@ try {
         }
     }
     $testSchemaOwned = true;
-    $test->multi_query(file_get_contents($root . '/subject_features.sql'));
+    $test->multi_query(file_get_contents($root . '/database/migrations/001_subject_features.sql'));
     do {
         if ($result = $test->store_result()) $result->free();
     } while ($test->more_results() && $test->next_result());
