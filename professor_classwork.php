@@ -18,7 +18,7 @@ $subjects = $contexts = $work = $responses = [];
 $ready = false;
 $workId = 0;
 $responseId = 0;
-$values = ['title' => '', 'instructions' => '', 'category' => 'quizzes', 'context' => '', 'questions_json' => '[]'];
+$values = ['title' => '', 'instructions' => '', 'category' => 'quizzes', 'context' => '', 'questions_json' => '[]', 'due_at' => ''];
 try {
     $data = kns_subject_db();
     $professor = kns_classwork_professor($data);
@@ -27,6 +27,7 @@ try {
         exit('Your professor account could not be verified.');
     }
     $ready = kns_classwork_schema_ready($data);
+    if (!kns_portal_permission($data, (int)$professor['id'], 'manage_classwork') && (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' || !isset($_GET['responses']))) { http_response_code(403); exit('Classwork management permission is required.'); }
     if ($ready) {
         $query = $data->prepare('SELECT s.id, s.subject_name FROM subjects s JOIN subject_professors p
             ON p.subject_id = s.id WHERE p.professor_id = ? ORDER BY s.subject_name');
@@ -43,16 +44,14 @@ try {
         }
     }
     if ($subject) {
-        $query = $data->prepare('SELECT DISTINCT section, academic_year, semester FROM subject_enrollments
-            WHERE subject_id = ? AND is_active = 1 ORDER BY academic_year DESC, semester, section');
-        $query->bind_param('i', $subjectId);
+        $query = $data->prepare('SELECT section,academic_year,semester FROM subject_sections WHERE subject_id=? AND professor_id=? ORDER BY academic_year DESC,semester,section');
+        $query->bind_param('ii', $subjectId, $professor['id']);
         $query->execute();
         $contexts = $query->get_result()->fetch_all(MYSQLI_ASSOC);
         if (isset($_GET['class'])) {
             $requestedClass = filter_var($_GET['class'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-            $query = $data->prepare('SELECT section, academic_year, semester FROM subject_enrollments
-                WHERE id = ? AND subject_id = ? AND is_active = 1');
-            $query->bind_param('ii', $requestedClass, $subjectId);
+            $query = $data->prepare('SELECT section,academic_year,semester FROM subject_sections WHERE id=? AND subject_id=? AND professor_id=?');
+            $query->bind_param('iii', $requestedClass, $subjectId, $professor['id']);
             $query->execute();
             $initialClass = $query->get_result()->fetch_assoc();
             if (!$requestedClass || !$initialClass) {
@@ -69,7 +68,7 @@ try {
             $draft = $query->get_result()->fetch_assoc();
             if (!$draft) throw new InvalidArgumentException('This draft is unavailable. Published questions cannot be changed after students can answer them.');
             $workId = (int) $draft['id'];
-            foreach (['title', 'instructions', 'category', 'questions_json'] as $field) $values[$field] = $draft[$field];
+            foreach (['title', 'instructions', 'category', 'questions_json', 'due_at'] as $field) $values[$field] = $draft[$field];
             $values['context'] = json_encode([$draft['section'], $draft['academic_year'], $draft['semester']], JSON_UNESCAPED_UNICODE);
         }
         if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
@@ -102,16 +101,21 @@ try {
                 if (!$context) throw new InvalidArgumentException('Choose a verified enrolled section and term.');
                 $questions = kns_classwork_questions($values['questions_json'], $publishing);
                 $questionJson = json_encode($questions, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+                $dueAt=null;
+                if ($values['due_at'] !== '') {
+                    $date=DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i', $values['due_at']);
+                    if (!$date || $date->format('Y-m-d\\TH:i') !== $values['due_at']) throw new InvalidArgumentException('Choose a valid deadline.');
+                    $dueAt=$date->format('Y-m-d H:i:s');
+                }
                 $status = $publishing ? 'published' : 'draft';
                 $data->begin_transaction();
                 try {
                     if (!kns_classwork_owned_subject($data, (int) $professor['id'], $subjectId, true)) throw new InvalidArgumentException('Your subject assignment is no longer available.');
-                    $query = $data->prepare('SELECT id FROM subject_enrollments WHERE subject_id = ? AND section = ?
-                        AND academic_year = ? AND semester = ? AND is_active = 1 ORDER BY id LIMIT 1 FOR UPDATE');
-                    $query->bind_param('isss', $subjectId, $context['section'], $context['academic_year'], $context['semester']);
+                    $query = $data->prepare('SELECT id FROM subject_sections WHERE subject_id=? AND section=? AND academic_year=? AND semester=? AND professor_id=? FOR UPDATE');
+                    $query->bind_param('isssi', $subjectId, $context['section'], $context['academic_year'], $context['semester'], $professor['id']);
                     $query->execute();
                     $activeClass = $query->get_result()->fetch_assoc();
-                    if (!$activeClass) throw new InvalidArgumentException('The selected section and term no longer has a verified active enrollment.');
+                    if (!$activeClass) throw new InvalidArgumentException('The selected section is no longer assigned to you.');
                     $returnClassId = (int) $activeClass['id'];
                     if ($workId) {
                         $query = $data->prepare("UPDATE subject_classwork SET section = ?, academic_year = ?, semester = ?, category = ?,
@@ -136,6 +140,7 @@ try {
                         $query->execute();
                         $workId = (int) $data->insert_id;
                     }
+                    kns_portal_query($data, 'UPDATE subject_classwork SET due_at=? WHERE id=?', [$dueAt,$workId]);
                     $data->commit();
                 } catch (Throwable $saveError) {
                     $data->rollback();
@@ -162,9 +167,9 @@ try {
         $work = $query->get_result()->fetch_all(MYSQLI_ASSOC);
         $responseId = filter_var($_GET['responses'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         if ($responseId) {
-            $query = $data->prepare('SELECT sub.answers_json, sub.submitted_at, u.username, w.title, w.questions_json
+            $query = $data->prepare('SELECT sub.id AS submission_id,sub.answers_json,sub.submitted_at,u.username,w.title,w.questions_json,g.score,g.feedback
                 FROM subject_classwork_submissions sub JOIN subject_classwork w ON w.id = sub.classwork_id
-                JOIN subject_enrollments e ON e.id = sub.enrollment_id JOIN user u ON u.id = e.student_id
+                JOIN subject_enrollments e ON e.id = sub.enrollment_id JOIN user u ON u.id = e.student_id LEFT JOIN classwork_grades g ON g.submission_id=sub.id
                 WHERE w.id = ? AND w.subject_id = ? AND w.professor_id = ? ORDER BY sub.id DESC LIMIT 100');
             $query->bind_param('iii', $responseId, $subjectId, $professor['id']);
             $query->execute();
@@ -218,6 +223,7 @@ $professorPageDescription = $responseId ? 'Review student responses in your prof
     <link rel="stylesheet" href="assets/css/professor-portal.css?v=1">
     <script src="assets/js/classwork-builder.js?v=1" defer></script>
     <script src="assets/js/professor-portal.js?v=1" defer></script>
+<script src="assets/js/portal-forms.js" defer></script>
 </head>
 <?php require __DIR__ . '/app/views/partials/professor_shell_start.php'; ?>
 <div class="classwork-page">
@@ -242,7 +248,7 @@ $professorPageDescription = $responseId ? 'Review student responses in your prof
                 <input type="hidden" name="questions_json" id="questions-json" value="<?= kns_subject_escape($values['questions_json']) ?>">
                 <label>Title<input name="title" maxlength="180" required value="<?= kns_subject_escape($values['title']) ?>"></label>
                 <div class="cw-row">
-                    <label>Category<select name="category"><?php foreach (['activities' => 'Activity', 'quizzes' => 'Quiz', 'exams' => 'Exam', 'projects' => 'Project'] as $key => $label): ?><option value="<?= $key ?>" <?= $values['category'] === $key ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label>
+                    <label>Deadline (optional)<input type="datetime-local" name="due_at" value="<?= kns_subject_escape($values['due_at'] ? date('Y-m-d\\TH:i',strtotime($values['due_at'])) : '') ?>"></label><label>Category<select name="category"><?php foreach (['activities' => 'Activity', 'quizzes' => 'Quiz', 'exams' => 'Exam', 'projects' => 'Project'] as $key => $label): ?><option value="<?= $key ?>" <?= $values['category'] === $key ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label>
                     <label>Section and term<select name="context" required><option value="">Choose a verified section</option><?php foreach ($contexts as $context): $encoded = json_encode(array_values($context), JSON_UNESCAPED_UNICODE); ?><option value="<?= kns_subject_escape($encoded) ?>" <?= $encoded === $values['context'] ? 'selected' : '' ?>><?= kns_subject_escape(implode(' | ', $context)) ?></option><?php endforeach; ?></select></label>
                 </div>
                 <label>Instructions<textarea name="instructions" rows="3" maxlength="10000"><?= kns_subject_escape($values['instructions']) ?></textarea></label>
@@ -298,6 +304,9 @@ Correct answer: An explicitly supplied sample answer.</pre><p>CSV: one question 
                     <ol><?php foreach ($questions as $index => $question): $answer = $answers[$index] ?? ''; $key = $question['answer']; if ($question['type'] === 'multiple_choice') { $answer = $question['choices'][(int) $answer] ?? ''; if ($key !== '') $key = $question['choices'][(int) $key] ?? ''; } ?>
                         <li><p class="cw-text"><?= kns_subject_escape($question['text']) ?></p><p class="cw-text">Response: <?= kns_subject_escape($answer) ?></p><p class="cw-text">Professor key: <?= $key !== '' ? kns_subject_escape($key) : 'Unset; review manually' ?></p></li>
                     <?php endforeach; ?></ol>
+                    <?php if (kns_portal_permission($data,(int)$professor['id'],'record_grades')): ?>
+                    <form method="post" action="portal_action.php" data-portal-form><input type="hidden" name="action" value="grade"><input type="hidden" name="csrf_token" value="<?= kns_subject_escape(kns_subject_csrf_token()) ?>"><input type="hidden" name="submission_id" value="<?= (int)$response['submission_id'] ?>"><label>Score (maximum <?= array_sum(array_column($questions,'points')) ?>)<input name="score" type="number" min="0" max="<?= array_sum(array_column($questions,'points')) ?>" step="0.01" value="<?= kns_subject_escape($response['score']??'') ?>" required></label><label>Feedback<textarea name="feedback" maxlength="5000"><?= kns_subject_escape($response['feedback']??'') ?></textarea></label><p data-form-status role="status"></p><button type="submit">Save grade</button></form>
+                    <?php else: ?><p>Grading permission must be enabled by an administrator.</p><?php endif; ?>
                 </details>
             <?php endforeach; ?>
         </section>

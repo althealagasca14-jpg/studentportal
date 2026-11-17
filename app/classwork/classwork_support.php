@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__DIR__) . '/helpers/subject_support.php';
+require_once dirname(__DIR__) . '/helpers/portal_support.php';
 
 const KNS_CLASSWORK_MAX_QUESTIONS = 200;
 const KNS_CLASSWORK_MAX_TEXT_BYTES = 1024 * 1024;
@@ -14,14 +14,11 @@ function kns_classwork_schema_ready(mysqli $data): bool
 
 function kns_classwork_professor(mysqli $data): ?array
 {
-    if (($_SESSION['usertype'] ?? '') !== 'professor' || !is_string($_SESSION['username'] ?? null)) {
-        return null;
-    }
-    $query = $data->prepare("SELECT id, username FROM user WHERE username = ? AND usertype = 'professor' LIMIT 2");
-    $query->bind_param('s', $_SESSION['username']);
-    $query->execute();
-    $rows = $query->get_result()->fetch_all(MYSQLI_ASSOC);
-    return count($rows) === 1 ? $rows[0] : null;
+    try {
+        $user=kns_portal_user($data,['professor']);
+        if(!kns_portal_permission($data,(int)$user['id'],'view_classes')) return null;
+        return ['id'=>$user['id'],'username'=>$user['username']];
+    } catch(InvalidArgumentException $error) { return null; }
 }
 
 function kns_classwork_owned_subject(mysqli $data, int $professorId, int $subjectId, bool $lock = false): ?array
@@ -107,11 +104,13 @@ function kns_classwork_questions($json, bool $publishing): array
 
 function kns_classwork_for_student(mysqli $data, array $enrollment): array
 {
-    $query = $data->prepare("SELECT w.id, w.title, w.instructions, w.category, w.questions_json,
+    $query = $data->prepare("SELECT w.id, w.title, w.instructions, w.category, w.questions_json,w.due_at,g.score,g.max_score,g.feedback,
         sub.answers_json, sub.submitted_at FROM subject_classwork w
         JOIN subject_professors p ON p.subject_id = w.subject_id AND p.professor_id = w.professor_id
         JOIN user u ON u.id = p.professor_id AND u.usertype = 'professor'
+        JOIN subject_sections ss ON ss.subject_id=w.subject_id AND ss.section=w.section AND ss.academic_year=w.academic_year AND ss.semester=w.semester AND ss.professor_id=w.professor_id
         LEFT JOIN subject_classwork_submissions sub ON sub.classwork_id = w.id AND sub.enrollment_id = ?
+        LEFT JOIN classwork_grades g ON g.submission_id=sub.id
         WHERE w.subject_id = ? AND w.section = ? AND w.academic_year = ? AND w.semester = ?
         AND w.status = 'published' ORDER BY w.id DESC");
     $query->bind_param('iisss', $enrollment['id'], $enrollment['subject_id'], $enrollment['section'],

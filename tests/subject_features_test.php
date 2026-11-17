@@ -78,7 +78,7 @@ try {
     $test->select_db($databaseName);
     if ($reuseDatabase) {
         $tables = array_column($test->query('SHOW TABLES')->fetch_all(MYSQLI_NUM), 0);
-        $expected = ['subject_enrollments', 'subject_message_attachments', 'subject_messages', 'subjects', 'user'];
+        $expected = ['account_tokens','admin_message_attachments','admin_professor_messages','auth_attempts','classwork_grades','courses','departments','mail_outbox','notification_preferences','notifications','portal_requests','professor_permissions','subject_classwork','subject_classwork_submissions','subject_enrollments','subject_message_attachments','subject_messages','subject_professors','subject_sections','subjects','user'];
         sort($tables); sort($expected);
         if ($tables !== $expected) throw new RuntimeException('The reused test schema is not the expected empty fixture schema.');
         foreach ($tables as $table) {
@@ -87,15 +87,17 @@ try {
             }
         }
     } else {
-        foreach (['user', 'subjects'] as $table) {
+        foreach (['departments', 'courses', 'user', 'subjects'] as $table) {
+            if (!(int)$source->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='".$table."'")->fetch_row()[0]) continue;
             $test->query($source->query('SHOW CREATE TABLE ' . $table)->fetch_row()[1]);
         }
     }
     $testSchemaOwned = true;
-    $test->multi_query(file_get_contents($root . '/database/migrations/001_subject_features.sql'));
-    do {
-        if ($result = $test->store_result()) $result->free();
-    } while ($test->more_results() && $test->next_result());
+    foreach (['001_subject_features.sql','002_classwork.sql','003_portal_management.sql'] as $migration) {
+        $test->multi_query(file_get_contents($root . '/database/migrations/' . $migration));
+        do { if ($result = $test->store_result()) $result->free(); }
+        while ($test->more_results() && $test->next_result());
+    }
     mkdir($temporaryRoot, 0700, true);
     mkdir($temporaryRoot . '/sessions', 0700);
     $token = bin2hex(random_bytes(32));
@@ -160,7 +162,7 @@ try {
     subject_test_assert(subject_test_request($base . '/subjectview.php?id=' . $subjects[1] . '&enrollment=' . $enrollments[0], $studentCookie)['status'] === 403, 'Cross-subject enrollment accepted.');
     subject_test_assert(subject_test_request($url, $sessions['student-two'])['status'] === 403, 'Another student opened a conversation.');
     $page = subject_test_request($url, $studentCookie);
-    subject_test_assert($page['status'] === 200 && str_contains($page['body'], 'Instructor-posted work not connected yet'), 'Real-source unavailable state missing.');
+    subject_test_assert($page['status'] === 200 && str_contains($page['body'], 'No published classwork'), 'Real-source unavailable state missing.');
     subject_test_assert(!str_contains($page['body'], 'Module 4 Assignment') && !str_contains($page['body'], 'Module 1: Introduction'), 'Hard-coded assignments remain.');
     subject_test_assert(str_contains($page['body'], '2026-2027') && str_contains($page['body'], '1st Semester'), 'Enrollment term not shown.');
 

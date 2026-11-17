@@ -1,6 +1,9 @@
 <?php
-error_reporting(0);
 session_start();
+require_once __DIR__ . '/app/helpers/portal_support.php';
+$loginCsrf = kns_subject_csrf_token();
+try { $loginDb = kns_subject_db(); $registrationCourses = kns_portal_rows($loginDb, 'SELECT id,code,name FROM courses ORDER BY code'); }
+catch (Throwable $error) { $registrationCourses = []; }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,8 +25,8 @@ session_start();
         </a>
         <nav class="portal-nav" aria-label="Main navigation">
             <a href="index.html">Home</a>
-            <a href="#school-help">Contact</a>
-            <a href="#admission-help">Admission</a>
+            <a href="contact.php">Contact</a>
+            <a href="contact.php?type=admission">Admission</a>
             <a class="nav-login" href="login.php" aria-current="page">Log in <span aria-hidden="true">&rarr;</span></a>
         </nav>
     </header>
@@ -60,6 +63,7 @@ session_start();
                         <?php endif; ?>
 
                         <form class="login-fields" action="login_check.php" method="POST">
+                            <input type="hidden" name="csrf_token" value="<?= kns_subject_escape($loginCsrf) ?>">
                             <fieldset class="login-form-controls">
                                 <fieldset class="login-role-picker">
                                     <legend>Log in as</legend>
@@ -128,8 +132,10 @@ session_start();
                         <h2 id="registration-title" tabindex="-1">Create your account</h2>
                         <p class="card-intro">Enter the details associated with your student account.</p>
 
-                        <!-- UI only: no registration endpoint exists in this project. -->
-                        <form class="registration-form" id="student-registration-form" method="POST">
+                        <!-- Registration creates a student account; class access still requires verified enrollment. -->
+                        <form class="registration-form" id="student-registration-form" action="portal_action.php" method="POST">
+                            <input type="hidden" name="csrf_token" value="<?= kns_subject_escape($loginCsrf) ?>">
+                            <input type="hidden" name="action" value="register">
                             <fieldset class="registration-fields" disabled>
                                 <div class="form-field">
                                     <label for="registration-full-name">Full name</label>
@@ -157,12 +163,14 @@ session_start();
                                     <label for="registration-password">Password</label>
                                     <div class="input-wrap">
                                         <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4m-4 5v3"/></svg>
-                                        <input id="registration-password" type="password" name="password" placeholder="Create a password" autocomplete="new-password" required>
+                                        <input id="registration-password" type="password" minlength="12" maxlength="72" name="password" placeholder="Create a password" autocomplete="new-password" required>
                                         <button class="password-toggle" id="registration-password-toggle" type="button" aria-label="Show password" aria-controls="registration-password" aria-pressed="false" hidden>
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="m3 3 18 18"/></svg>
                                         </button>
                                     </div>
                                 </div>
+                                <div class="form-field"><label for="registration-course">Course (optional)</label><select id="registration-course" name="course_id"><option value="">Select course</option><?php foreach ($registrationCourses as $course): ?><option value="<?= (int)$course['id'] ?>"><?= kns_subject_escape($course['code'].' · '.$course['name']) ?></option><?php endforeach; ?></select></div>
+                                <p class="field-hint">Use a password of 12–72 bytes. Course and enrollment details remain subject to school verification.</p>
                                 <button class="login-button" type="submit">Create student account <span aria-hidden="true">&rarr;</span></button>
                             </fieldset>
                         </form>
@@ -184,19 +192,20 @@ session_start();
             </span>
             <p class="card-eyebrow">Account support</p>
             <h2 id="recovery-title">Forgot your password?</h2>
-            <p id="recovery-intro">Enter your student number, username, account ID, or registered school email to view account recovery guidance.</p>
-            <!-- No recovery endpoint exists. This form only shows school-office guidance. -->
-            <form id="recovery-form" method="dialog">
+            <p id="recovery-intro">Enter your student number, username, account ID, or registered school email to request a password reset link.</p>
+            <!-- Recovery requests queue a single-use, expiring account link. -->
+            <form id="recovery-form" action="portal_action.php" method="POST"><input type="hidden" name="action" value="recover">
+                            <input type="hidden" name="csrf_token" value="<?= kns_subject_escape($loginCsrf) ?>">
                 <div class="form-field">
                     <label for="recovery-identifier">Account identifier or school email</label>
-                    <input id="recovery-identifier" type="text" placeholder="Account identifier or school email" autocomplete="off" autocapitalize="none" spellcheck="false" required autofocus>
+                    <input id="recovery-identifier" name="identifier" type="text" placeholder="Account identifier or school email" autocomplete="off" autocapitalize="none" spellcheck="false" required autofocus>
                 </div>
                 <button class="login-button" type="submit">Continue <span aria-hidden="true">&rarr;</span></button>
             </form>
             <div class="recovery-confirmation" id="recovery-confirmation" role="status" tabindex="-1" hidden>
                 <p class="confirmation-title">Your next step</p>
                 <p>For account recovery, contact the school office with your student number, username, account ID, or registered school email. Staff can guide you through verifying account ownership.</p>
-                <p>No recovery message has been sent from this page.</p>
+                <p>Email delivery is handled by the configured school email service.</p>
                 <a class="office-link" href="#school-help">View school office help <span aria-hidden="true">&rarr;</span></a>
             </div>
         </div>

@@ -2,6 +2,12 @@
 (() => {
     "use strict";
 
+    async function accountRequest(form) {
+        const response = await fetch(form.getAttribute("action"), { method: "POST", body: new FormData(form), credentials: "same-origin", headers: { Accept: "application/json" } });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.message || "The request could not be completed.");
+        return result.message;
+    }
     const loginForm = document.querySelector(".login-fields");
     const loginIdentifier = document.getElementById("login-identifier");
     const identifierLabel = document.querySelector('label[for="login-identifier"]');
@@ -162,18 +168,28 @@
             forgotPassword.focus();
         });
 
-        recoveryForm.addEventListener("submit", (event) => {
+        recoveryForm.addEventListener("submit", async (event) => {
             event.preventDefault();
             if (!recoveryIdentifier.value.trim()) {
                 recoveryIdentifier.setCustomValidity("Enter your account identifier or registered school email.");
                 recoveryIdentifier.reportValidity();
                 return;
             }
-            // There is no backend recovery service. Do not submit, store, or echo identifiers.
-            recoveryForm.hidden = true;
-            confirmation.hidden = false;
-            confirmation.focus();
-            recoveryForm.reset();
+            const button = recoveryForm.querySelector('[type="submit"]');
+            if (button.disabled) return;
+            button.disabled = true;
+            try {
+                const message = await accountRequest(recoveryForm);
+                recoveryForm.hidden = true;
+                confirmation.hidden = false;
+                confirmation.querySelector(".confirmation-title").textContent = "Request received";
+                confirmation.querySelector(".confirmation-title + p").textContent = message;
+                confirmation.focus();
+                recoveryForm.reset();
+            } catch (error) {
+                recoveryIdentifier.setCustomValidity(error.message);
+                recoveryIdentifier.reportValidity();
+            } finally { button.disabled = false; }
         });
         recoveryIdentifier.addEventListener("input", () => recoveryIdentifier.setCustomValidity(""));
     } else {
@@ -204,7 +220,7 @@
             });
         });
     });
-    // Registration is a local UI preview until a backend handler is available.
+    // Registration saves through the authenticated-CSRF public account handler.
     const authCard = document.querySelector(".auth-card");
     const loginFace = document.getElementById("login-face");
     const registrationFace = document.getElementById("registration-face");
@@ -292,8 +308,8 @@
         registrationStatus.hidden = true;
         registrationStatus.textContent = "";
     });
-    registrationForm.addEventListener("submit", (event) => {
-        // No requests, stored registration data, emails, or account creation.
+    registrationForm.addEventListener("submit", async (event) => {
+        // Validate locally, then let the server enforce uniqueness and save a password hash.
         event.preventDefault();
         if (!registrationIsActive) return;
         if (!registrationFullName.value.trim()) {
@@ -302,7 +318,14 @@
             return;
         }
         if (!registrationForm.reportValidity()) return;
-        registrationStatus.textContent = "Online registration is not available yet. Please contact the school office to register. No account has been created.";
+        const button = registrationForm.querySelector('[type="submit"]');
+        if (button.disabled) return;
+        button.disabled = true;
+        try {
+            registrationStatus.textContent = await accountRequest(registrationForm);
+            registrationPassword.value = "";
+        } catch (error) { registrationStatus.textContent = error.message; }
+        finally { button.disabled = false; }
         registrationStatus.hidden = false;
         registrationStatus.focus({ preventScroll: true });
         registrationStatus.scrollIntoView({ block: "nearest", inline: "nearest" });

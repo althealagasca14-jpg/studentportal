@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/app/helpers/subject_support.php';
+require_once __DIR__ . '/app/helpers/portal_support.php';
 require_once __DIR__ . '/app/helpers/student_ui.php';
 if (!isset($_SESSION['username'], $_SESSION['usertype']) || $_SESSION['usertype'] !== 'student') {
     header('Location: login.php');
@@ -8,7 +8,7 @@ if (!isset($_SESSION['username'], $_SESSION['usertype']) || $_SESSION['usertype'
 }
 try {
     $data = kns_subject_db();
-    $student = kns_subject_student($data);
+    $student = kns_portal_user($data, ['student']);
     if (!$student) {
         http_response_code(403);
         exit('Your student account could not be verified.');
@@ -16,18 +16,20 @@ try {
     $subjects = $data->query('SELECT id, subject_name, instructor, description FROM subjects ORDER BY id')->fetch_all(MYSQLI_ASSOC);
     $enrollmentRows = [];
     if (kns_subject_schema_ready($data)) {
-        $query = $data->prepare('SELECT subject_id, section, academic_year, semester FROM subject_enrollments WHERE student_id = ? AND is_active = 1');
-        $query->bind_param('i', $student['id']);
+        $query = $data->prepare('SELECT e.subject_id,e.section,e.academic_year,e.semester,COALESCE(c.code,\'\') AS course FROM subject_enrollments e LEFT JOIN courses c ON c.id=COALESCE(e.course_id,?) WHERE e.student_id=? AND e.is_active=1');
+        $query->bind_param('ii', $student['course_id'], $student['id']);
         $query->execute();
         $enrollmentRows = $query->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+} catch (InvalidArgumentException $error) {
+    http_response_code(403); exit('Your account session is no longer valid. Please sign in again.');
 } catch (Throwable $error) {
     error_log('[student-dashboard] ' . $error->getMessage());
     http_response_code(503);
     exit('The student portal is temporarily unavailable. Please try again later.');
 }
 $bySubject = [];
-$choices = ['academic_year' => [], 'section' => [], 'semester' => []];
+$choices = ['academic_year' => [], 'section' => [], 'semester' => [], 'course' => []];
 $terms = [];
 foreach ($enrollmentRows as $row) {
     $bySubject[$row['subject_id']][] = $row;
@@ -38,6 +40,16 @@ foreach ($enrollmentRows as $row) {
 }
 foreach ($choices as &$values) { $values = array_values($values); sort($values); }
 unset($values);
+$tasks = kns_portal_rows($data, "SELECT DISTINCT w.id,e.id AS enrollment_id,w.due_at,w.created_at,sub.id AS submission_id FROM subject_enrollments e
+    JOIN subject_classwork w ON w.subject_id=e.subject_id AND w.section=e.section AND w.academic_year=e.academic_year AND w.semester=e.semester AND w.status='published'
+    JOIN subject_sections ss ON ss.subject_id=w.subject_id AND ss.section=w.section AND ss.academic_year=w.academic_year AND ss.semester=w.semester AND ss.professor_id=w.professor_id
+    JOIN user p ON p.id=w.professor_id AND p.account_status='active'
+    LEFT JOIN subject_classwork_submissions sub ON sub.classwork_id=w.id AND sub.enrollment_id=e.id WHERE e.student_id=? AND e.is_active=1", [$student['id']]);
+$totalTasks=count($tasks);$completed=count(array_filter($tasks,fn($task)=>$task['submission_id']!==null));$remaining=$totalTasks-$completed;
+$completion=$totalTasks?(int)round($completed/$totalTasks*100):0;
+$weekStart=strtotime('today -'.date('w').' days');$weekly=array_fill(0,7,0);
+foreach($tasks as $task) if($task['due_at']) { $day=(int)floor((strtotime($task['due_at'])-$weekStart)/86400);if($day>=0&&$day<7)$weekly[$day]++; }
+$studentNotifications=kns_portal_rows($data,'SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 20',[$student['id']]);
 $view = ($_GET['view'] ?? '') === 'subjects' ? 'subjects' : 'dashboard';
 $hasEnrollments = count($bySubject) > 0;
 $termLabel = count($terms) === 1 ? array_key_first($terms) : (count($terms) > 1 ? 'Multiple enrolled terms' : 'Term not linked');
@@ -55,7 +67,7 @@ foreach ($subjects as $subject) {
     <meta name="theme-color" content="#133e30">
     <title>Student Portal | Kolehiyo ng Subic</title>
     <link rel="stylesheet" href="assets/css/student-portal.css?v=1">
-    <script src="assets/js/student-portal.js?v=1" defer></script>
+    <script src="assets/js/student-portal.js?v=1" defer></script><script src="assets/js/portal-forms.js" defer></script>
 </head>
 <body class="student-shell" data-current-view="<?= $view ?>">
     <a href="#student-main" class="ui-skip">Skip to content</a>
@@ -87,17 +99,17 @@ foreach ($subjects as $subject) {
                 <p class="heading-description" id="student-page-description"><?= $view === 'dashboard' ? 'Here’s a clear view of your workload and subjects.' : 'Browse your subjects and open a class portal.' ?></p>
             </div>
             <div class="heading-actions"><span class="term-pill"><span></span><?= kns_subject_escape($termLabel) ?></span>
-                <details class="student-notifications"><summary class="icon-button" aria-label="Notifications"><?= kns_ui_icon('bell') ?></summary><div>No notifications are available. Notification updates are not connected yet.</div></details>
+                <details class="student-notifications"><summary class="icon-button" aria-label="Notifications"><?= kns_ui_icon('bell') ?></summary><div><?php if (!$studentNotifications): ?>No notifications yet.<?php endif; ?><?php foreach ($studentNotifications as $notice): ?><p><strong><?= kns_subject_escape($notice['title']) ?></strong><br><?= kns_subject_escape($notice['body']) ?><small><?= kns_subject_escape($notice['created_at']) ?></small></p><?php endforeach; ?><?php if ($studentNotifications): ?><form method="post" action="portal_action.php" data-portal-form data-reload="true"><input type="hidden" name="csrf_token" value="<?= kns_subject_escape(kns_subject_csrf_token()) ?>"><input type="hidden" name="action" value="notifications_read"><p data-form-status role="status"></p><button type="submit">Mark all read</button></form><?php endif; ?></div></details>
             </div>
         </header>
 
         <section id="student-overview" <?= $view !== 'dashboard' ? 'hidden' : '' ?> aria-label="Student overview">
             <div class="student-metrics">
                 <?php foreach ([
-                    ['Total tasks', '—', 'Waiting for instructor records', 'record'],
-                    ['Completed', '—', 'Submission data not connected', 'check'],
-                    ['Remaining', '—', 'Task records not connected', 'clock'],
-                    ['Workload status', 'Not available', 'Connect task records to view status', 'trend']
+                    ['Total tasks', $totalTasks, 'Published items in your enrolled classes', 'record'],
+                    ['Completed', $completed, 'Answers submitted for professor review', 'check'],
+                    ['Remaining', $remaining, 'Published items awaiting your submission', 'clock'],
+                    ['Workload status', $remaining ? 'In progress' : 'Up to date', $remaining ? 'Continue your remaining classwork' : 'No outstanding published items', 'trend']
                 ] as $metric): ?>
                     <article class="ui-card metric-tile">
                         <div class="metric-heading"><h2><?= $metric[0] ?></h2><span class="soft-icon"><?= kns_ui_icon($metric[3]) ?></span></div>
@@ -108,17 +120,17 @@ foreach ($subjects as $subject) {
             </div>
             <div class="student-charts">
                 <section class="ui-card workload-card" aria-labelledby="workload-title">
-                    <div class="panel-heading"><div><h2 id="workload-title">Weekly workload</h2><p>Task activity across the week</p></div><span class="chart-key"><i></i>Workload level</span></div>
-                    <div class="workload-chart" role="img" aria-label="Weekly workload chart unavailable until instructor task records are connected">
+                    <div class="panel-heading"><div><h2 id="workload-title">Weekly workload</h2><p>Tasks due this week · Sunday to Saturday</p></div><span class="chart-key"><i></i>Workload level</span></div>
+                    <div class="workload-chart" role="img" aria-label="Weekly task due-date counts from enrolled classes">
                         <div class="workload-grid"><span></span><span></span><span></span><span></span></div>
-                        <p class="chart-unavailable">Your workload will appear here<br><small>Instructor task records are not connected yet.</small></p>
+                        <div class="workload-live-bars" aria-label="<?= kns_subject_escape(implode(', ', $weekly)) ?>"><?php foreach ($weekly as $amount): ?><div><span><?= $amount ?></span><i style="height:<?= $amount ? max(8, (int)round($amount/max(1,max($weekly))*100)) : 0 ?>%"></i></div><?php endforeach; ?></div>
                         <div class="chart-days"><?php foreach (['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as $day): ?><span><?= $day ?></span><?php endforeach; ?></div>
                     </div>
                 </section>
                 <section class="ui-card completion-card" aria-labelledby="completion-title">
                     <div class="panel-heading"><div><h2 id="completion-title">Completion rate</h2><p>Your current term progress</p></div></div>
-                    <div class="completion-ring" role="img" aria-label="Completion rate unavailable"><span><strong>—</strong><small>not available</small></span></div>
-                    <p class="completion-caption">Waiting for submission records</p><p class="completion-note">Your progress will appear when records are connected.</p>
+                    <div class="completion-ring" role="img" aria-label="<?= $completion ?> percent completed" style="background:conic-gradient(#169b66 <?= $completion ?>%,#e9efec 0)"><span><strong><?= $completion ?>%</strong><small>completed</small></span></div>
+                    <p class="completion-caption"><?= $completed ?> of <?= $totalTasks ?> published items submitted</p><p class="completion-note">Only verified enrolled classes are included. Tasks without a due date are excluded from the weekly chart.</p>
                 </section>
             </div>
         </section>
@@ -139,7 +151,7 @@ foreach ($subjects as $subject) {
                             </select></label>
                         <?php endforeach; ?>
                     </div>
-                    <p class="filter-hint">Filter choices come from your verified enrollment records. Course data is not available yet.</p>
+                    <p class="filter-hint">Filter choices come from your verified enrollment records. Course choices come from the enrolled student profile.</p>
                 </section>
             </div>
             <?php if (!$hasEnrollments): ?><p class="catalog-note">Enrollment verification is pending. These are the subjects available in the portal.</p><?php endif; ?>

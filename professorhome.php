@@ -8,6 +8,8 @@ if (($_SESSION['usertype'] ?? '') !== 'professor') {
     header('Location: login.php');
     exit;
 }
+try { $entryDb=kns_subject_db();$entryUser=kns_portal_user($entryDb,['professor']);if(!kns_portal_permission($entryDb,(int)$entryUser['id'],'view_classes')) {header('Location: faculty_messages.php');exit;} }
+catch(Throwable $error) {http_response_code(403);exit('Please sign in with an active professor account.');}
 $professorView = in_array($_GET['view'] ?? '', ['classwork', 'messages', 'students'], true) ? $_GET['view'] : 'classwork';
 $professorClasses = [];
 $professorSelectedClass = null;

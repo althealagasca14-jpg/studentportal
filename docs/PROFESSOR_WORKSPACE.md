@@ -1,3 +1,5 @@
+Current database-backed behavior (accounts, deadlines, grades, notifications, and reports) is documented in [Portal database setup](PORTAL_DATABASE.md). Historical setup notes below may predate migration 003.
+
 # Professor workspace
 
 Open professorhome.php after signing in as a professor. The dark green workspace

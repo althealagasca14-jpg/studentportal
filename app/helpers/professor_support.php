@@ -4,21 +4,15 @@ require_once __DIR__ . '/student_ui.php';
 
 function kns_professor_url(string $view = 'classwork', int $classId = 0, array $extra = []): string
 {
+    if ($view === 'admin-messages') return 'faculty_messages.php';
     return 'professorhome.php?' . http_build_query(array_merge(['view' => $view], $classId ? ['class' => $classId] : [], $extra));
 }
 
 function kns_professor_classes(mysqli $data, int $professorId): array
 {
-    $query = $data->prepare("SELECT MIN(e.id) AS class_id, s.id AS subject_id, s.subject_name,
-        e.section, e.academic_year, e.semester FROM subject_professors p
-        JOIN subjects s ON s.id = p.subject_id
-        JOIN subject_enrollments e ON e.subject_id = s.id AND e.is_active = 1
-        JOIN user student ON student.id = e.student_id AND student.usertype = 'student'
-        WHERE p.professor_id = ? GROUP BY s.id, s.subject_name, e.section, e.academic_year, e.semester
-        ORDER BY e.academic_year DESC, e.semester, s.subject_name, e.section");
-    $query->bind_param('i', $professorId);
-    $query->execute();
-    return $query->get_result()->fetch_all(MYSQLI_ASSOC);
+    return kns_portal_rows($data, "SELECT ss.id AS class_id,s.id AS subject_id,s.subject_name,ss.section,ss.academic_year,ss.semester
+        FROM subject_sections ss JOIN subjects s ON s.id=ss.subject_id
+        WHERE ss.professor_id=? ORDER BY ss.academic_year DESC,ss.semester,s.subject_name,ss.section", [$professorId]);
 }
 
 function kns_professor_roster(mysqli $data, int $professorId, array $class): array
@@ -27,7 +21,7 @@ function kns_professor_roster(mysqli $data, int $professorId, array $class): arr
         (SELECT m.message FROM subject_messages m WHERE m.enrollment_id = e.id ORDER BY m.id DESC LIMIT 1) AS last_message,
         (SELECT m.created_at FROM subject_messages m WHERE m.enrollment_id = e.id ORDER BY m.id DESC LIMIT 1) AS last_message_at
         FROM subject_enrollments e JOIN user u ON u.id = e.student_id AND u.usertype = 'student'
-        JOIN subject_professors p ON p.subject_id = e.subject_id AND p.professor_id = ?
+        JOIN subject_sections p ON p.subject_id=e.subject_id AND p.section=e.section AND p.academic_year=e.academic_year AND p.semester=e.semester AND p.professor_id=?
         WHERE e.subject_id = ? AND e.section = ? AND e.academic_year = ? AND e.semester = ? AND e.is_active = 1
         ORDER BY u.username, e.id");
     $query->bind_param('iisss', $professorId, $class['subject_id'], $class['section'], $class['academic_year'], $class['semester']);
@@ -39,7 +33,7 @@ function kns_professor_enrollment(mysqli $data, int $professorId, array $class, 
 {
     $query = $data->prepare("SELECT e.id, e.student_id, e.subject_id, e.section, e.academic_year, e.semester, u.username
         FROM subject_enrollments e JOIN user u ON u.id = e.student_id AND u.usertype = 'student'
-        JOIN subject_professors p ON p.subject_id = e.subject_id AND p.professor_id = ?
+        JOIN subject_sections p ON p.subject_id=e.subject_id AND p.section=e.section AND p.academic_year=e.academic_year AND p.semester=e.semester AND p.professor_id=?
         WHERE e.id = ? AND e.subject_id = ? AND e.section = ? AND e.academic_year = ? AND e.semester = ?
         AND e.is_active = 1" . ($lock ? ' FOR UPDATE' : ''));
     $query->bind_param('iiisss', $professorId, $enrollmentId, $class['subject_id'], $class['section'], $class['academic_year'], $class['semester']);
