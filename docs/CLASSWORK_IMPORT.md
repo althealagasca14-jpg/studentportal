@@ -1,3 +1,5 @@
+Current database-backed behavior (accounts, deadlines, grades, notifications, and reports) is documented in [Portal database setup](PORTAL_DATABASE.md). Historical setup notes below may predate migration 003.
+
 # Classwork and private question imports
 
 This checkout had no professor posting, question builder, quiz records, or student

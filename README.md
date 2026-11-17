@@ -47,6 +47,7 @@ use filesystem paths; browser assets use paths relative to these root pages.
 3. For a new installation of these features, apply migrations in order:
    - database/migrations/001_subject_features.sql
    - database/migrations/002_classwork.sql
+   - database/migrations/003_portal_management.sql (run php database/migrate.php --apply for a private backup first)
    Moving or renaming these files does not require rerunning migrations already
    applied to an existing installation.
 4. Use PHP 8.1 or newer with mysqli, mbstring, fileinfo, zip, and DOM enabled.
@@ -61,6 +62,8 @@ The test runner remains in tests/. Only its helper and migration references
 were updated for the new layout; its assertions and behavior are unchanged.
 
 ## Feature guides
+
+- [Connected admin, accounts, reports, settings, and database setup](docs/PORTAL_DATABASE.md)
 
 - [Classwork and question imports](docs/CLASSWORK_IMPORT.md)
 - [Professor workspace](docs/PROFESSOR_WORKSPACE.md)

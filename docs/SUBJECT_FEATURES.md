@@ -1,3 +1,5 @@
+Current database-backed behavior (accounts, deadlines, grades, notifications, and reports) is documented in [Portal database setup](PORTAL_DATABASE.md). Historical setup notes below may predate migration 003.
+
 # Subject messages and subject work
 
 ## Verified source inventory

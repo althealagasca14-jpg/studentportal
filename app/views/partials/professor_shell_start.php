@@ -14,7 +14,7 @@ $professorShowPicker = $professorShowPicker ?? true;
     <a class="pf-brand" href="<?= kns_subject_escape(kns_professor_url('classwork', $professorClassId)) ?>"><span class="pf-brand-mark">K</span><span><strong>KNS Portal</strong><small>Professor workspace</small></span></a>
     <p class="pf-nav-label">Workspace</p>
     <nav class="pf-nav" aria-label="Workspace navigation">
-        <?php foreach (['classwork' => ['record', 'Classwork'], 'messages' => ['chat', 'Student messages'], 'students' => ['user', 'Students']] as $pfKey => $pfItem): ?>
+        <?php foreach (['classwork' => ['record', 'Classwork'], 'admin-messages' => ['chat', 'Admin messages'], 'messages' => ['chat', 'Student messages'], 'students' => ['user', 'Students']] as $pfKey => $pfItem): ?>
             <a href="<?= kns_subject_escape(kns_professor_url($pfKey, $professorClassId)) ?>" <?= $professorView === $pfKey ? 'aria-current="page"' : '' ?>><?= kns_ui_icon($pfItem[0]) ?><span><?= $pfItem[1] ?></span></a>
         <?php endforeach; ?>
     </nav>
@@ -41,5 +41,5 @@ $professorShowPicker = $professorShowPicker ?? true;
         </section>
     <?php endif; ?>
     <nav class="pf-tabs" aria-label="Selected class">
-        <?php foreach (['classwork' => 'Classwork', 'messages' => 'Student messages', 'students' => 'Students'] as $pfKey => $pfLabel): ?><a href="<?= kns_subject_escape(kns_professor_url($pfKey, $professorClassId)) ?>" <?= $professorView === $pfKey ? 'aria-current="page"' : '' ?>><?= $pfLabel ?></a><?php endforeach; ?>
+        <?php foreach (['classwork' => 'Classwork', 'admin-messages' => 'Admin messages', 'messages' => 'Student messages', 'students' => 'Students'] as $pfKey => $pfLabel): ?><a href="<?= kns_subject_escape(kns_professor_url($pfKey, $professorClassId)) ?>" <?= $professorView === $pfKey ? 'aria-current="page"' : '' ?>><?= $pfLabel ?></a><?php endforeach; ?>
     </nav>

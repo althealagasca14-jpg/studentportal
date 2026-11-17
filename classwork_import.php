@@ -27,6 +27,7 @@ try {
     $professor = kns_classwork_professor($data);
     $subjectId = filter_var($_POST['subject_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
     if (!$professor || !$subjectId || !kns_classwork_schema_ready($data)
+        || !kns_portal_permission($data,(int)$professor['id'],'manage_classwork')
         || !kns_classwork_owned_subject($data, (int) $professor['id'], $subjectId)) {
         http_response_code(403);
         throw new InvalidArgumentException('This subject is not available to your professor account.');

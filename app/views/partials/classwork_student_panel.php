@@ -10,7 +10,7 @@ if (!isset($classworkReady, $classworkItems, $enrollment, $csrf_token)) return;
             <h3><?= kns_subject_escape($item['title']) ?></h3>
             <p><?= kns_subject_escape(ucfirst($item['category'])) ?> &middot; <?= count($item['questions']) ?> questions &middot; <?= array_sum(array_column($item['questions'], 'points')) ?> points</p>
             <?php if ($item['instructions'] !== ''): ?><p class="cw-text"><?= kns_subject_escape($item['instructions']) ?></p><?php endif; ?>
-            <?php if ($item['submitted_at']): ?><p class="cw-notice">Submitted <?= kns_subject_escape($item['submitted_at']) ?>. Your answers are saved for professor review. No automatic grade has been assigned.</p><?php endif; ?>
+            <?php if (!empty($item['due_at'])): ?><p>Deadline: <?= kns_subject_escape($item['due_at']) ?></p><?php endif; ?><?php if ($item['score'] !== null): ?><p class="cw-notice">Grade: <?= kns_subject_escape($item['score']) ?> / <?= kns_subject_escape($item['max_score']) ?><br><?= kns_subject_escape($item['feedback']) ?></p><?php endif; ?><?php if ($item['submitted_at']): ?><p class="cw-notice">Submitted <?= kns_subject_escape($item['submitted_at']) ?>. Your answers are saved for professor review. Grades appear after professor review.</p><?php endif; ?>
             <details <?= !$item['submitted_at'] && count($classworkItems) === 1 ? 'open' : '' ?>><summary><?= $item['submitted_at'] ? 'View your submitted answers' : 'Answer in Student Portal' ?></summary>
                 <form method="post" action="classwork_submit.php" class="cw-answer-form">
                     <input type="hidden" name="csrf_token" value="<?= kns_subject_escape($csrf_token) ?>">

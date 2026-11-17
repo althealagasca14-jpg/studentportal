@@ -25,15 +25,9 @@ function kns_subject_escape($value): string
 
 function kns_subject_student(mysqli $data): ?array
 {
-    if (!isset($_SESSION['username'], $_SESSION['usertype']) || $_SESSION['usertype'] !== 'student'
-        || !is_string($_SESSION['username'])) {
-        return null;
-    }
-    $query = $data->prepare("SELECT id, username FROM user WHERE username = ? AND usertype = 'student' LIMIT 2");
-    $query->bind_param('s', $_SESSION['username']);
-    $query->execute();
-    $rows = $query->get_result()->fetch_all(MYSQLI_ASSOC);
-    return count($rows) === 1 ? $rows[0] : null;
+    require_once __DIR__.'/portal_support.php';
+    try { $user=kns_portal_user($data,['student']);return ['id'=>$user['id'],'username'=>$user['username']]; }
+    catch(InvalidArgumentException $error){ return null; }
 }
 
 function kns_subject_schema_ready(mysqli $data): bool

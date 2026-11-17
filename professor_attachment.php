@@ -28,7 +28,7 @@ try {
         FROM subject_message_attachments a JOIN subject_messages m ON m.id = a.message_id
         JOIN subject_enrollments e ON e.id = m.enrollment_id AND e.is_active = 1
         JOIN user student ON student.id = e.student_id AND student.usertype = 'student'
-        JOIN subject_professors p ON p.subject_id = e.subject_id
+        JOIN subject_sections p ON p.subject_id=e.subject_id AND p.section=e.section AND p.academic_year=e.academic_year AND p.semester=e.semester
         WHERE a.id = ? AND p.professor_id = ? LIMIT 1");
     $query->bind_param('ii', $attachmentId, $professor['id']);
     $query->execute();

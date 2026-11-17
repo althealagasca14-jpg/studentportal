@@ -47,7 +47,7 @@ try {
         }
         $query = $data->prepare("SELECT w.questions_json FROM subject_classwork w
             JOIN subject_professors p ON p.subject_id = w.subject_id AND p.professor_id = w.professor_id
-            JOIN user u ON u.id = p.professor_id AND u.usertype = 'professor'
+            JOIN user u ON u.id = p.professor_id AND u.usertype = 'professor' AND u.account_status='active' JOIN subject_sections ss ON ss.subject_id=w.subject_id AND ss.section=w.section AND ss.academic_year=w.academic_year AND ss.semester=w.semester AND ss.professor_id=w.professor_id
             WHERE w.id = ? AND w.subject_id = ? AND w.section = ? AND w.academic_year = ? AND w.semester = ?
             AND w.status = 'published' FOR UPDATE");
         $query->bind_param('iisss', $workId, $subjectId, $enrollment['section'], $enrollment['academic_year'], $enrollment['semester']);

@@ -151,3 +151,14 @@
 }
 @media (max-width:540px) { .subject-grid { grid-template-columns:1fr; } .student-main { padding-inline:16px; } .subject-filter-panel { padding:16px; } .subject-filter-grid { gap:10px; } .student-notifications > div { left:0; right:auto; } .subject-shell .subject-summary { grid-template-columns:1fr; } .subject-shell .subject-summary > div { display:flex; justify-content:space-between; align-items:center; gap:14px; } .subject-shell .subject-summary strong { margin-top:0; text-align:right; } .subject-count-badge { font-size:10px; padding:5px 8px; } }
 @media (prefers-reduced-motion:reduce) { :where(.student-shell,.subject-shell) *, :where(.student-shell,.subject-shell) *::before, :where(.student-shell,.subject-shell) *::after { transition:none !important; scroll-behavior:auto !important; } }
+
+/* Data from verified classwork and submission records. */
+.workload-live-bars { position:absolute; inset:20px 0 28px; display:grid; grid-template-columns:repeat(7,1fr); gap:15px; align-items:end; }
+.workload-live-bars > div { position:relative; display:flex; height:100%; align-items:flex-end; justify-content:center; padding-top:20px; }
+.workload-live-bars i { display:block; width:min(24px,65%); border-radius:5px 5px 0 0; background:#62b78d; }
+.workload-live-bars span { position:absolute; top:0; color:#4b6c5b; font-size:11px; }
+.completion-ring { padding:15px; border:0; }
+.completion-ring > span { display:grid; place-content:center; width:100%; height:100%; border-radius:50%; background:white; }
+.student-notifications > div { max-height:380px; overflow:auto; }
+.student-notifications p { margin:10px 0; }
+.student-notifications small { display:block; color:#6d8176; }
