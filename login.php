@@ -13,24 +13,11 @@ catch (Throwable $error) { $registrationCourses = []; }
     <meta name="theme-color" content="#075638">
     <title>Log in | Kolehiyo ng Subic</title>
     <link rel="icon" href="assets/images/logo.jpg" type="image/jpeg">
-    <link rel="stylesheet" href="assets/css/login.css?v=3">
+    <link rel="stylesheet" href="assets/css/login.css?v=5">
     <script src="assets/js/login.js?v=3" defer></script>
 </head>
-<body class="student-login">
+<body class="student-login student-login--direct">
     <a class="skip-link" href="#login-identifier">Skip to login</a>
-    <header class="portal-header">
-        <a class="portal-brand" href="index.html" aria-label="Kolehiyo ng Subic home">
-            <span class="school-seal school-seal--nav"><img src="assets/images/logo.jpg" alt="" width="1024" height="768"></span>
-            <span><strong>Kolehiyo ng Subic</strong><span class="brand-caption">Student Portal</span></span>
-        </a>
-        <nav class="portal-nav" aria-label="Main navigation">
-            <a href="index.html">Home</a>
-            <a href="contact.php">Contact</a>
-            <a href="contact.php?type=admission">Admission</a>
-            <a class="nav-login" href="login.php" aria-current="page">Log in <span aria-hidden="true">&rarr;</span></a>
-        </nav>
-    </header>
-
     <main class="portal-layout">
         <section class="welcome-panel" aria-labelledby="welcome-title">
             <div class="welcome-content">

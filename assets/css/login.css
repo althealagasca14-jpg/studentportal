@@ -58,6 +58,7 @@
 .student-login .portal-nav .nav-login { gap: 16px; padding: 10px 22px; border-radius: 10px; background: var(--green); color: white; box-shadow: 0 6px 18px #087a4b1a; }
 .student-login .portal-nav .nav-login:hover { background: var(--deep-green); }
 .student-login .portal-layout { display: grid; grid-template-columns: 1.03fr 1fr; min-height: calc(100svh - 88px); }
+.student-login--direct .portal-layout { min-height: 100svh; }
 .student-login .welcome-panel { position: relative; isolation: isolate; display: flex; align-items: center; overflow: hidden; padding: 56px clamp(36px, 6.7vw, 128px); color: white; background: linear-gradient(145deg, #087a4b 0%, #086842 50%, #075638 100%); }
 .student-login .welcome-panel::before, .student-login .welcome-panel::after { content: ""; position: absolute; z-index: -1; width: 650px; height: 650px; top: -280px; right: -330px; border: 1px solid #ffffff12; border-radius: 50%; pointer-events: none; }
 .student-login .welcome-panel::after { width: 480px; height: 480px; top: -195px; right: -245px; background: #f3d44703; }

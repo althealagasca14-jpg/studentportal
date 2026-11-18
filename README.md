@@ -19,7 +19,7 @@ studentportal/
 |-- database/seeds/             # Optional local demo data
 |-- docs/                       # Feature setup and limitations
 |-- tests/                      # Existing integration checks
-|-- index.html                  # Public landing page
+|-- index.php                   # Redirects the portal root directly to login
 |-- login.php                   # Login page
 |-- login_check.php             # Authentication handler
 |-- logout.php                  # Session logout
