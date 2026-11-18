@@ -111,3 +111,36 @@
 /* Keep every composer control reachable when attachments or a short viewport reduce thread space. */
 .subject-shell[data-embedded="true"] .message-thread { min-height:0; }
 .subject-shell[data-embedded="true"] .message-composer { min-height:0; max-height:75%; overflow:auto; overscroll-behavior:contain; }
+
+/* Approved subject styling; existing classroom and private-message modes remain separate. */
+.subject-shell:not(.professor-shell) { --portal-green:#164d3b; --portal-deep:#143c32; --portal-ink:#243c32; --portal-border:#e3e8e1; background:#f7f8f4; font-family:"Segoe UI",Arial,sans-serif; }
+.subject-shell .subject-hero { border-color:#d5e4d5; background:#e0eee2; }
+.subject-shell .subject-hero h1 { font:400 clamp(27px,3vw,38px)/1.2 Georgia,"Times New Roman",serif; letter-spacing:-1px; overflow-wrap:anywhere; }
+.subject-shell .subject-hero .ui-eyebrow { color:#416444; font-size:10px; letter-spacing:1.5px; }
+.subject-shell .subject-hero .subject-intro, .subject-shell .subject-hero .subject-instructor { color:#526c56; }
+.subject-shell .subject-summary > div { border-color:#e3e8e1; border-radius:14px; background:white; }
+.subject-shell .subject-summary > div:nth-child(2) { background:#eae6f5; }
+.subject-shell .subject-summary > div:nth-child(3) { background:#f5e8db; }
+.subject-shell .subject-summary small, .subject-shell .subject-context { color:#647366; }
+.subject-shell .subject-summary strong { overflow-wrap:anywhere; }
+.subject-shell .classroom-work-heading h2 { font:400 24px/1.3 Georgia,"Times New Roman",serif; letter-spacing:-.5px; }
+.subject-shell .subject-work-filter { border-color:#dce3d7; border-radius:9px; color:#536b54; }
+.subject-shell .subject-work-filter[aria-pressed="true"] { border-color:#ceddc8; background:#e5eddd; color:#164d3b; }
+.subject-shell .subject-work-filter[aria-pressed="true"] span { background:transparent; color:inherit; }
+.subject-shell .subject-work-empty { border-color:#e3e8e1; border-radius:17px; background:white; box-shadow:none; }
+.subject-shell .enrollment-picker, .subject-shell .message-professor, .subject-shell .message-composer { border-color:#e3e8e1; background:#fcfcf8; }
+.subject-shell .enrollment-picker select, .subject-shell .enrollment-picker button, .subject-shell .message-topic input, .subject-shell #subject-message { border-color:#dce3d7; color:#243c32; }
+.subject-shell .message-thread { background:#f7f8f4; }
+.subject-shell .subject-message { border-color:#d0dfca; border-radius:14px 14px 4px 14px; background:#e0eee2; }
+.subject-shell .message-send { border-radius:12px; background:#164d3b; }
+.subject-shell .message-send:hover:not(:disabled) { background:#103d2e; }
+.subject-shell .message-access-note { color:#74602d; }
+.subject-shell .thread-empty p, .subject-shell .message-professor p, .subject-shell .message-compose-help, .subject-shell .subject-attachment-count { color:#647366; }
+@media (max-width:540px) {
+    .subject-shell .classroom-work-heading { flex-wrap:wrap; }
+    .subject-shell .classroom-work-heading h2 { font-size:22px; }
+    .subject-shell .subject-hero h1 { font-size:28px; }
+}
+
+.subject-shell .subject-class-nav{display:flex;flex:0 0 auto;flex-wrap:wrap;gap:12px 24px;padding:12px 24px;border-bottom:1px solid #e3e8e1;background:#fcfcf8;font-size:12px;color:#164d3b}
+.subject-shell .subject-class-nav a:focus-visible{outline:3px solid #164d3b;outline-offset:3px}

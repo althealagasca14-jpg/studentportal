@@ -203,7 +203,7 @@
         if (event.target !== reviewed) reviewed.checked = false;
     });
     form.addEventListener("submit", event => {
-        json.value = JSON.stringify(questions);
+        json.value = JSON.stringify(document.getElementById("cw-submission-mode")?.value === "files" ? [] : questions);
         if (request) {
             event.preventDefault();
             builderStatus.textContent = "Wait for the file import to finish, then review the questions before saving or publishing.";
@@ -216,5 +216,16 @@
             reviewed.focus();
         }
     });
-    render(); sync();
+    const submissionMode = document.getElementById("cw-submission-mode");
+    const applySubmissionMode = () => {
+        const fileOnly = submissionMode?.value === "files";
+        list.querySelectorAll("input,textarea,select,button").forEach(control => control.disabled = fileOnly);
+        fileInput.disabled = fileOnly;
+        importButton.disabled = fileOnly || !fileInput.files[0];
+        document.getElementById("cw-add-question").disabled = fileOnly || questions.length >= maxQuestions;
+        reviewed.checked = false;
+        if (fileOnly && request) request.abort();
+    };
+    submissionMode?.addEventListener("change", applySubmissionMode);
+    render(); sync(); applySubmissionMode();
 })();

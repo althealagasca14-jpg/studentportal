@@ -19,7 +19,7 @@ studentportal/
 |-- database/seeds/             # Optional local demo data
 |-- docs/                       # Feature setup and limitations
 |-- tests/                      # Existing integration checks
-|-- index.html                  # Public landing page
+|-- index.php                   # Redirects the portal root directly to login
 |-- login.php                   # Login page
 |-- login_check.php             # Authentication handler
 |-- logout.php                  # Session logout
@@ -73,3 +73,9 @@ were updated for the new layout; its assertions and behavior are unchanged.
 Keep reusable backend code in app/, public assets in assets/, schema changes
 in database/migrations/, and detailed feature documentation in docs/. New PHP
 includes should resolve paths with __DIR__ rather than the current directory.
+
+## Connected classroom implementation
+
+The approved prototype is now the design reference for connected Student and Professor features. See [docs/CLASSROOM_IMPLEMENTATION.md](docs/CLASSROOM_IMPLEMENTATION.md) for the feature files, local-only database checks, additive migrations 004–007, verification, Admin retirement, and manual review checklist.
+
+Migrations 001–003 already exist and must not be rerun for this work. Use only the dedicated classroom migration runner described in that guide; the historical setup commands above describe earlier work.

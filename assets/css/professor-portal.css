@@ -212,3 +212,59 @@
     .pf-filters { gap: 5px; }
     .pf-filters button { gap: 5px; padding-inline: 9px; font-size: 11px; }
 }
+
+/* Approved portal palette on the existing professor shell and shared builder. */
+.professor-shell { --pf-bg:#f7f8f4; --pf-surface:#fff; --pf-border:#e3e8e1; --pf-text:#243c32; --pf-muted:#647366; --pf-accent:#164d3b; color-scheme:light; }
+.professor-shell .pf-sidebar { --pf-accent:#d9e8b7; background:#143c32; border-color:#284f40; color:#f5f7ec; }
+.professor-shell .pf-brand-mark { width:39px; height:42px; border:1px solid #bed2a33d; border-radius:11px; background:#e7f0d60e; color:#d7e6b3; }
+.professor-shell .pf-brand-mark svg { width:24px; height:24px; }
+.professor-shell .pf-nav a { border-radius:9px; }
+.professor-shell .pf-nav a[aria-current="page"] { background:#2b5545; color:white; }
+.professor-shell .pf-heading--portal h1 { font:400 clamp(30px,2.8vw,40px)/1.2 Georgia,"Times New Roman",serif; letter-spacing:-1px; }
+.professor-shell .pf-eyebrow { font-size:10px; letter-spacing:1.5px; }
+.professor-shell .pf-term { background:#f0f3eb; color:#4f6753; }
+.professor-shell .pf-class-picker { border-radius:17px; }
+.professor-shell .pf-class-icon, .professor-shell .pf-item-icon, .professor-shell .pf-empty-icon { background:#e0eee2; color:#416444; }
+.professor-shell .pf-class-picker select, .professor-shell .pf-search, .professor-shell .pf-topic-label input, .professor-shell .pf-reply-form textarea { border-color:#dce3d7; background:#fcfcf8; color:var(--pf-text); }
+.professor-shell .pf-panel { border-radius:17px; box-shadow:0 4px 20px #243c3203; }
+.professor-shell .pf-work-panel .pf-panel-heading h2, .professor-shell .pf-roster-panel .pf-panel-heading h2 { font:400 24px/1.3 Georgia,"Times New Roman",serif; letter-spacing:-.5px; }
+.professor-shell .pf-button { border-color:#d3dfce; background:#eef3e8; color:#164d3b; }
+.professor-shell .pf-button:hover { background:#e0ead9; }
+.professor-shell .pf-primary { border-color:#164d3b; background:#164d3b; color:white; }
+.professor-shell .pf-primary:hover { background:#103d2e; }
+.professor-shell .pf-filters button[aria-pressed="true"] { border-color:#ceddc8; background:#e5eddd; color:#164d3b; }
+.professor-shell .pf-item-copy strong, .professor-shell .pf-empty :is(h2,h3) { color:#243c32; }
+.professor-shell .pf-work-row:hover .pf-item-copy strong { color:#164d3b; }
+.professor-shell .pf-category-activities { background:#eae6f5; color:#655384; }
+.professor-shell .pf-category-quizzes, .professor-shell .pf-category-exams { background:#f5e8db; color:#8a6139; }
+.professor-shell .pf-status, .professor-shell .pf-count { background:#e0eee2; color:#355e3d; }
+.professor-shell .pf-status.is-draft { background:#f2edda; color:#74602d; }
+.professor-shell .pf-panel-footnote, .professor-shell .pf-student-table th, .professor-shell .pf-private, .professor-shell .pf-history-note, .professor-shell .pf-topic-label, .professor-shell .pf-reply-actions > span { color:#647366; }
+.professor-shell .pf-search input::placeholder, .professor-shell .pf-reply-form textarea::placeholder { color:#647366; }
+.professor-shell .pf-notice { border-color:#caddc4; background:#edf4e7; color:#355e3d; }
+.professor-shell .pf-notice.pf-error { border-color:#e6c7bc; background:#fff2ec; color:#8b4230; }
+.professor-shell .pf-conversations { background:#fcfcf8; }
+.professor-shell .pf-conversation-link { border-color:#e3e8e1; }
+.professor-shell .pf-conversation-link small { color:#647366; }
+.professor-shell .pf-conversation-link[aria-current="true"], .professor-shell .pf-conversation-link:hover { background:#e5eddd; }
+.professor-shell .pf-thread { background:#f7f8f4; }
+.professor-shell .pf-message { border-color:#e3e8e1; background:white; }
+.professor-shell .pf-message.is-mine { border-color:#ceddc8; background:#e0eee2; }
+.professor-shell .pf-message-meta time, .professor-shell .pf-message-topic, .professor-shell .pf-attachment small { color:#596f5a; }
+.professor-shell .pf-attachment { border-color:#d4e0ce; background:#fcfcf8; }
+.professor-shell .classwork-page > h2, .professor-shell .cw-form label, .professor-shell .cw-text { color:#243c32; }
+.professor-shell .cw-form :is(input:not([type="checkbox"]),textarea,select) { border-color:#dce3d7; background:#fcfcf8; color:#243c32; }
+.professor-shell .cw-form input::file-selector-button, .professor-shell .cw-form button { border-color:#d3dfce; background:#eef3e8; color:#164d3b; }
+.professor-shell .cw-form button[value="publish"] { background:#164d3b; color:white; }
+.professor-shell .cw-form button:hover:not(:disabled) { background:#dce8d4; color:#164d3b; }
+.professor-shell .cw-notice { border-color:#e1d7b8; background:#faf5e5; color:#74602d; }
+.professor-shell .cw-error { color:#8b4230; }
+.professor-shell .cw-card summary { color:#164d3b; }
+.professor-shell .cw-card pre { border-color:#e3e8e1; background:#f7f8f4; color:#243c32; }
+@media (max-width:760px) {
+    .professor-shell .pf-brand-mark { width:36px; height:40px; }
+    .professor-shell .pf-nav { flex-wrap:wrap; }
+    .professor-shell .pf-nav a { flex:1 1 calc(50% - 6px); }
+    .professor-shell .pf-tabs { flex-wrap:wrap; gap:4px 18px; }
+    .professor-shell .pf-panel-heading h2 { font-size:21px; }
+}

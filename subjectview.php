@@ -3,6 +3,7 @@ session_start();
 require_once __DIR__ . '/app/helpers/subject_support.php';
 require_once __DIR__ . '/app/helpers/student_ui.php';
 require_once __DIR__ . '/app/classwork/classwork_support.php';
+require_once __DIR__ . '/app/helpers/classroom_support.php';
 header('X-Frame-Options: SAMEORIGIN');
 $subject_mode = ($_GET['view'] ?? '') === 'message' ? 'message' : 'classroom';
 $subject_embedded = ($_GET['embed'] ?? '') === '1';
@@ -54,7 +55,7 @@ try {
         $access_note = 'Subject messaging is not available yet. Please contact the school office.';
         http_response_code(503);
     } elseif (!$enrollments) {
-        $access_note = 'Your enrollment for this subject has not been verified yet. Contact the school office to access its private conversation.';
+        $access_note = 'Join your section using the class code from your professor in My classes before opening its private conversation.';
         http_response_code(403);
     } elseif (!$enrollment) {
         $access_note = 'Select your enrolled section and term below to open its private conversation.';
@@ -99,7 +100,7 @@ try {
             if ($message_value === '' && !$attachments) {
                 throw new InvalidArgumentException('Write a message or attach at least one photo or file.');
             }
-            kns_subject_save_message($data, $enrollment, $student, $subject, $topic_value, $message_value, $attachments);
+            kns_subject_save_message($data, $enrollment, $student, $subject, $topic_value, $message_value, $attachments, (int)($_POST['question_classwork_id']??0)?['classwork_id'=>(int)$_POST['question_classwork_id'],'topic'=>is_string($_POST['question_topic']??null)?$_POST['question_topic']:'']:[]);
             $_SESSION['subject_message_success'][$enrollment['id']] = 'Message saved to your private subject conversation.';
             header('Location: subjectview.php?' . http_build_query(array_merge(['id' => $subject_id, 'enrollment' => $enrollment['id']], isset($_GET['view']) ? ['view' => $subject_mode] : [], $subject_embedded ? ['embed' => '1'] : [])) . '#subject-conversation', true, 303);
             exit;
@@ -145,6 +146,8 @@ try {
             $classworkError = 'Classwork is temporarily unavailable. Please try again later.';
         }
     }
+    $classroomClass=$enrollment?kns_portal_one($data,"SELECT ss.id FROM subject_sections ss JOIN user p ON p.id=ss.professor_id AND p.usertype='professor' AND p.account_status='active' WHERE ss.subject_id=? AND ss.section=? AND ss.academic_year=? AND ss.semester=?",[$subject_id,$enrollment['section'],$enrollment['academic_year'],$enrollment['semester']]):null;
+    $questionOptions=$enrollment?kns_portal_rows($data,"SELECT w.id,w.title FROM subject_classwork w JOIN subject_sections ss ON ss.subject_id=w.subject_id AND ss.section=w.section AND ss.academic_year=w.academic_year AND ss.semester=w.semester AND ss.professor_id=w.professor_id WHERE w.subject_id=? AND w.section=? AND w.academic_year=? AND w.semester=? AND w.status='published' ORDER BY w.id DESC",[$subject_id,$enrollment['section'],$enrollment['academic_year'],$enrollment['semester']]):[];
     $csrf_token = kns_subject_csrf_token();
 } catch (Throwable $error) {
     error_log('[subject-page] ' . $error->getMessage());
@@ -161,10 +164,11 @@ try {
     <link rel="stylesheet" href="assets/css/student-portal.css?v=1">
     <link rel="stylesheet" href="assets/css/subject-page.css?v=2">
     <script src="assets/js/subject-page.js?v=3" defer></script>
+    <script src="assets/js/classwork-files.js" defer></script>
     <?php if ($subject_mode === 'classroom'): ?><link rel="stylesheet" href="assets/css/classwork.css?v=1"><?php endif; ?>
 </head>
 <body class="subject-shell" data-embedded="<?= $subject_embedded ? 'true' : 'false' ?>" data-subject-mode="<?= $subject_mode ?>">
-    <header class="subject-head">
+    <header class="subject-head subject-hero">
         <?php if (!$subject_embedded): ?><a href="studenthome.php?view=subjects" class="subject-back"><?= kns_ui_icon('arrow') ?> Back to my subjects</a><?php endif; ?>
         <p class="ui-eyebrow"><?= $subject_mode === 'message' ? 'Subject conversation' : 'Subject classroom' ?><?php if ($subject_mode !== 'message' && $enrollment): ?> &middot; <?= kns_subject_escape($enrollment['academic_year']) ?> &middot; <?= kns_subject_escape($enrollment['semester']) ?><?php endif; ?></p>
         <h1><?= $subject_mode === 'message' ? 'Private message' : kns_subject_escape($subject['subject_name']) ?></h1>
@@ -173,6 +177,7 @@ try {
             <p class="subject-intro"><?= kns_subject_escape($subject['description']) ?></p>
         <?php endif; ?>
     </header>
+    <?php if($classroomClass):?><nav class="subject-class-nav" aria-label="Class communication"><a href="classroom.php?class=<?= (int)$classroomClass['id'] ?>&amp;tab=updates" target="_top">Class updates</a><a href="classroom.php?class=<?= (int)$classroomClass['id'] ?>&amp;tab=chat" target="_top">Official group chat</a><a href="classes.php" target="_top">My classes</a></nav><?php endif;?>
     <?php if ($subject_mode === 'message'): ?>
         <div class="message-professor"><span class="soft-icon"><?= kns_ui_icon('user') ?></span><div><strong><?= kns_subject_escape($subject['instructor']) ?></strong><p><?= kns_subject_escape($subject['subject_name']) ?></p></div></div>
     <?php endif; ?>
@@ -254,6 +259,7 @@ try {
                     <input type="hidden" name="csrf_token" value="<?= kns_subject_escape($csrf_token) ?>">
                     <input type="hidden" name="enrollment_id" value="<?= (int) ($enrollment['id'] ?? 0) ?>">
                     <details class="message-topic"><summary>Topic: <?= kns_subject_escape($topic_value) ?></summary><label for="subject-message-topic">Module / Topic</label><input id="subject-message-topic" name="subject_module" value="<?= kns_subject_escape($topic_value) ?>" maxlength="100" required></details>
+                    <details class="message-topic"><summary>Related activity (optional)</summary><label>Activity<select name="question_classwork_id"><option value="0">General subject question</option><?php foreach($questionOptions as $option):?><option value="<?= (int)$option['id'] ?>"><?= kns_subject_escape($option['title']) ?></option><?php endforeach;?></select></label><label>Question topic<select name="question_topic"><?php foreach(kns_classroom_question_topics() as $key=>$label):?><option value="<?= $key ?>"><?= kns_subject_escape($label) ?></option><?php endforeach;?></select></label><p>Only an anonymous count by activity/topic may appear in a professor alert. Your message stays private.</p></details>
                     <ul class="subject-selected-attachments" id="subject-selected-attachments" aria-label="Selected attachments"></ul>
                     <div class="message-compose-row">
                         <div class="subject-attach-controls">

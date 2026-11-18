@@ -18,7 +18,7 @@ $subjects = $contexts = $work = $responses = [];
 $ready = false;
 $workId = 0;
 $responseId = 0;
-$values = ['title' => '', 'instructions' => '', 'category' => 'quizzes', 'context' => '', 'questions_json' => '[]', 'due_at' => ''];
+$values = ['title' => '', 'instructions' => '', 'category' => 'quizzes', 'context' => '', 'questions_json' => '[]', 'due_at' => '', 'submission_mode'=>'online', 'file_points'=>'100'];
 try {
     $data = kns_subject_db();
     $professor = kns_classwork_professor($data);
@@ -68,7 +68,7 @@ try {
             $draft = $query->get_result()->fetch_assoc();
             if (!$draft) throw new InvalidArgumentException('This draft is unavailable. Published questions cannot be changed after students can answer them.');
             $workId = (int) $draft['id'];
-            foreach (['title', 'instructions', 'category', 'questions_json', 'due_at'] as $field) $values[$field] = $draft[$field];
+            foreach (['title', 'instructions', 'category', 'questions_json', 'due_at', 'submission_mode', 'file_points'] as $field) $values[$field] = $draft[$field];
             $values['context'] = json_encode([$draft['section'], $draft['academic_year'], $draft['semester']], JSON_UNESCAPED_UNICODE);
         }
         if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
@@ -99,7 +99,13 @@ try {
                     if (json_encode(array_values($candidate), JSON_UNESCAPED_UNICODE) === $values['context']) $context = $candidate;
                 }
                 if (!$context) throw new InvalidArgumentException('Choose a verified enrolled section and term.');
-                $questions = kns_classwork_questions($values['questions_json'], $publishing);
+                $mode=$values['submission_mode'];
+                if(!in_array($mode,['online','files','online_and_files'],true))throw new InvalidArgumentException('Choose a submission format.');
+                $filePoints=filter_var($values['file_points'],FILTER_VALIDATE_FLOAT);
+                if($filePoints===false||!is_finite($filePoints)||$filePoints<0.01||$filePoints>100000||round($filePoints,2)!=$filePoints)throw new InvalidArgumentException('Use a file score from 0.01 to 100,000 with at most two decimal places.');
+                $attachments=kns_subject_validate_uploads($_FILES);
+                $newClassworkPaths=[];
+                $questions = $mode==='files'?[]:kns_classwork_questions($values['questions_json'], $publishing);
                 $questionJson = json_encode($questions, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
                 $dueAt=null;
                 if ($values['due_at'] !== '') {
@@ -140,10 +146,12 @@ try {
                         $query->execute();
                         $workId = (int) $data->insert_id;
                     }
-                    kns_portal_query($data, 'UPDATE subject_classwork SET due_at=? WHERE id=?', [$dueAt,$workId]);
+                    kns_portal_query($data, 'UPDATE subject_classwork SET due_at=?,submission_mode=?,file_points=? WHERE id=?', [$dueAt,$mode,$filePoints,$workId]);
+                    kns_classwork_store_files($data,'work',$workId,$attachments,$newClassworkPaths);
                     $data->commit();
                 } catch (Throwable $saveError) {
                     $data->rollback();
+                    kns_classwork_cleanup_files($newClassworkPaths);
                     throw $saveError;
                 }
                 $_SESSION['classwork_saved'] = $publishing ? 'Classwork published. Enrolled students can answer it inside this portal.' : 'Draft saved. Students cannot see it.';
@@ -167,7 +175,7 @@ try {
         $work = $query->get_result()->fetch_all(MYSQLI_ASSOC);
         $responseId = filter_var($_GET['responses'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         if ($responseId) {
-            $query = $data->prepare('SELECT sub.id AS submission_id,sub.answers_json,sub.submitted_at,u.username,w.title,w.questions_json,g.score,g.feedback
+            $query = $data->prepare('SELECT sub.id AS submission_id,sub.answers_json,sub.submitted_at,u.username,w.title,w.questions_json,w.submission_mode,w.file_points,g.score,g.feedback
                 FROM subject_classwork_submissions sub JOIN subject_classwork w ON w.id = sub.classwork_id
                 JOIN subject_enrollments e ON e.id = sub.enrollment_id JOIN user u ON u.id = e.student_id LEFT JOIN classwork_grades g ON g.submission_id=sub.id
                 WHERE w.id = ? AND w.subject_id = ? AND w.professor_id = ? ORDER BY sub.id DESC LIMIT 100');
@@ -231,7 +239,7 @@ $professorPageDescription = $responseId ? 'Review student responses in your prof
     <?php if ($error): ?><p class="cw-notice cw-error" role="alert"><?= kns_subject_escape($error) ?></p><?php endif; ?>
     <?php if ($flash): ?><p class="cw-notice" role="status"><?= kns_subject_escape($flash) ?></p><?php endif; ?>
     <?php if (!$ready): ?>
-        <p class="cw-notice">Classwork setup is pending. Ask the school administrator to apply the classwork migration and assign verified professor accounts to subjects.</p>
+        <p class="cw-notice">Classwork is temporarily unavailable. Please contact the school office.</p>
     <?php elseif (!$subject): ?>
         <h2>Your assigned subjects</h2>
         <?php if (!$subjects): ?><p class="cw-notice">No subjects have been assigned to your account. Contact the school office.</p><?php endif; ?>
@@ -239,8 +247,8 @@ $professorPageDescription = $responseId ? 'Review student responses in your prof
     <?php else: ?>
         <h2><?= kns_subject_escape($subject['subject_name']) ?></h2>
         <?php if (!$responseId): ?>
-        <?php if (!$contexts): ?><p class="cw-notice">No verified active student enrollments exist for this subject. Ask the school office to connect the section and term before creating classwork.</p><?php endif; ?>
-        <form method="post" class="cw-form" id="classwork-form" data-import-url="classwork_import.php" data-max-file-bytes="<?= KNS_SUBJECT_MAX_FILE_BYTES ?>" data-max-questions="<?= KNS_CLASSWORK_MAX_QUESTIONS ?>">
+        <?php if (!$contexts): ?><p class="cw-notice">Create a section for this subject before creating classwork. Open <a href="classes.php">Subjects &amp; sections</a> to continue.</p><?php endif; ?>
+        <form method="post" enctype="multipart/form-data" class="cw-form" id="classwork-form" data-import-url="classwork_import.php" data-max-file-bytes="<?= KNS_SUBJECT_MAX_FILE_BYTES ?>" data-max-questions="<?= KNS_CLASSWORK_MAX_QUESTIONS ?>">
             <fieldset <?= !$contexts ? 'disabled' : '' ?>>
                 <input type="hidden" name="csrf_token" value="<?= kns_subject_escape(kns_subject_csrf_token()) ?>">
                 <input type="hidden" name="subject_id" value="<?= (int) $subjectId ?>">
@@ -272,6 +280,16 @@ Answer: B
 Question 2: Explain your reasoning.
 Correct answer: An explicitly supplied sample answer.</pre><p>CSV: one question per row, with headers question, A, B, C, D, answer, points, type. Only question is required. Use multiple_choice or short_answer for type. Quote fields containing commas or newlines.</p></details>
                 </section>
+                <div class="cw-card">
+                    <h2>Submission format</h2>
+                    <label>How students submit<select name="submission_mode" id="cw-submission-mode"><?php foreach(['online'=>'Online answers','files'=>'Photos / files','online_and_files'=>'Online answers and photos / files'] as $mode=>$label):?><option value="<?= $mode ?>" <?= $values['submission_mode']===$mode?'selected':'' ?>><?= $label ?></option><?php endforeach;?></select></label>
+                    <label>Maximum score for file-only submissions<input type="number" name="file_points" min="0.01" max="100000" step="0.01" value="<?= kns_subject_escape($values['file_points']) ?>" required></label>
+                    <p>Online formats keep their question points. File-only work uses the maximum score above.</p>
+                    <h2>Classwork attachments</h2><p>Up to 3 attachments total, 5 MiB each. Imported question source files remain separate.</p>
+                    <?php foreach($workId?kns_classwork_file_rows($data,'work',$workId):[] as $file):?><p><a href="classwork_attachment.php?type=work&amp;id=<?= (int)$file['id'] ?>&amp;download=1"><?= kns_subject_escape($file['original_name']) ?></a></p><?php endforeach;?>
+                    <label>Attach photos<input type="file" name="photos[]" accept=".jpg,.jpeg,.png,.gif,.webp" multiple></label>
+                    <label>Attach files<input type="file" name="files[]" accept=".pdf,.txt,.docx,.xlsx,.pptx" multiple></label>
+                </div>
                 <h2>Questions</h2>
                 <p>Default: 1 point. Only explicit source answer keys are imported. Unset keys require manual grading.</p>
                 <p id="cw-builder-status" role="status" aria-live="polite"></p>
@@ -304,9 +322,10 @@ Correct answer: An explicitly supplied sample answer.</pre><p>CSV: one question 
                     <ol><?php foreach ($questions as $index => $question): $answer = $answers[$index] ?? ''; $key = $question['answer']; if ($question['type'] === 'multiple_choice') { $answer = $question['choices'][(int) $answer] ?? ''; if ($key !== '') $key = $question['choices'][(int) $key] ?? ''; } ?>
                         <li><p class="cw-text"><?= kns_subject_escape($question['text']) ?></p><p class="cw-text">Response: <?= kns_subject_escape($answer) ?></p><p class="cw-text">Professor key: <?= $key !== '' ? kns_subject_escape($key) : 'Unset; review manually' ?></p></li>
                     <?php endforeach; ?></ol>
+                    <?php foreach(kns_classwork_file_rows($data,'submission',(int)$response['submission_id']) as $file):?><p><a href="classwork_attachment.php?type=submission&amp;id=<?= (int)$file['id'] ?>&amp;download=1"><?= kns_subject_escape($file['original_name']) ?></a> (<?= kns_subject_escape(kns_subject_file_size((int)$file['byte_size'])) ?>)</p><?php endforeach;?>
                     <?php if (kns_portal_permission($data,(int)$professor['id'],'record_grades')): ?>
-                    <form method="post" action="portal_action.php" data-portal-form><input type="hidden" name="action" value="grade"><input type="hidden" name="csrf_token" value="<?= kns_subject_escape(kns_subject_csrf_token()) ?>"><input type="hidden" name="submission_id" value="<?= (int)$response['submission_id'] ?>"><label>Score (maximum <?= array_sum(array_column($questions,'points')) ?>)<input name="score" type="number" min="0" max="<?= array_sum(array_column($questions,'points')) ?>" step="0.01" value="<?= kns_subject_escape($response['score']??'') ?>" required></label><label>Feedback<textarea name="feedback" maxlength="5000"><?= kns_subject_escape($response['feedback']??'') ?></textarea></label><p data-form-status role="status"></p><button type="submit">Save grade</button></form>
-                    <?php else: ?><p>Grading permission must be enabled by an administrator.</p><?php endif; ?>
+                    <form method="post" action="portal_action.php" data-portal-form><input type="hidden" name="action" value="grade"><input type="hidden" name="csrf_token" value="<?= kns_subject_escape(kns_subject_csrf_token()) ?>"><input type="hidden" name="submission_id" value="<?= (int)$response['submission_id'] ?>"><label>Score (maximum <?= kns_classwork_max_score($response,$questions) ?>)<input name="score" type="number" min="0" max="<?= kns_classwork_max_score($response,$questions) ?>" step="0.01" value="<?= kns_subject_escape($response['score']??'') ?>" required></label><label>Feedback<textarea name="feedback" maxlength="5000"><?= kns_subject_escape($response['feedback']??'') ?></textarea></label><p data-form-status role="status"></p><button type="submit">Save grade</button></form>
+                    <?php else: ?><p>Grading is not enabled for this account.</p><?php endif; ?>
                 </details>
             <?php endforeach; ?>
         </section>

@@ -260,7 +260,7 @@ function kns_subject_storage_dir(bool $create = false): string
     return realpath($resolved);
 }
 
-function kns_subject_save_message(mysqli $data, array $enrollment, array $student, array $subject, string $topic, string $body, array $attachments): int
+function kns_subject_save_message(mysqli $data, array $enrollment, array $student, array $subject, string $topic, string $body, array $attachments, array $question = []): int
 {
     $paths = [];
     $data->begin_transaction();
@@ -296,6 +296,10 @@ function kns_subject_save_message(mysqli $data, array $enrollment, array $studen
                     $attachment['mime_type'], $attachment['byte_size'], $attachment['attachment_kind']);
                 $attachmentQuery->execute();
             }
+        }
+        if ($question) {
+            require_once __DIR__.'/classroom_support.php';
+            kns_classroom_record_question($data,(int)$student['id'],(int)$enrollment['id'],(int)$question['classwork_id'],(string)$question['topic']);
         }
         $data->commit();
         return $messageId;
