@@ -80,6 +80,7 @@ foreach ($subjects as $subject) {
             </div>
             <p class="sidebar-caption">Student menu</p>
             <nav class="student-nav">
+                <a href="classes.php"><?= kns_ui_icon('book') ?><span>My classes / join</span></a>
                 <a href="studenthome.php" data-student-nav="dashboard" <?= $view === 'dashboard' ? 'aria-current="page"' : '' ?>><?= kns_ui_icon('home') ?><span>Dashboard</span></a>
                 <a href="studenthome.php?view=subjects#subjectsSection" data-student-nav="subjects" <?= $view === 'subjects' ? 'aria-current="page"' : '' ?>><?= kns_ui_icon('book') ?><span>My Subjects</span></a>
             </nav>
@@ -91,7 +92,7 @@ foreach ($subjects as $subject) {
     </aside>
     <button class="sidebar-shade" type="button" aria-label="Close student menu" hidden></button>
     <main class="student-main" id="student-main" tabindex="-1">
-        <header class="student-heading">
+        <header class="student-heading portal-page-heading">
             <div class="heading-copy">
                 <button class="icon-button menu-toggle" type="button" aria-label="Open student menu" aria-controls="student-sidebar" aria-expanded="false"><?= kns_ui_icon('menu') ?></button>
                 <p class="ui-eyebrow" id="student-eyebrow"><?= $view === 'dashboard' ? 'Student overview' : 'Your classes' ?></p>
@@ -157,7 +158,7 @@ foreach ($subjects as $subject) {
             <?php if (!$hasEnrollments): ?><p class="catalog-note">Enrollment verification is pending. These are the subjects available in the portal.</p><?php endif; ?>
             <div class="subject-grid" id="subject-grid">
                 <?php foreach ($subjects as $index => $subject): ?>
-                    <article class="ui-card subject-card" data-subject-id="<?= (int) $subject['id'] ?>" <?= $view === 'dashboard' && $index >= 3 ? 'hidden' : '' ?>>
+                    <article class="ui-card subject-card portal-subject-card" data-subject-id="<?= (int) $subject['id'] ?>" <?= $view === 'dashboard' && $index >= 3 ? 'hidden' : '' ?>>
                         <div class="subject-card-top"><span class="soft-icon"><?= kns_ui_icon('record') ?></span><span class="subject-status"><?= isset($bySubject[$subject['id']]) ? 'Enrolled' : 'Subject' ?></span></div>
                         <h3><?= kns_subject_escape($subject['subject_name']) ?></h3>
                         <p class="subject-professor"><?= kns_ui_icon('user') ?><?= kns_subject_escape($subject['instructor']) ?></p>

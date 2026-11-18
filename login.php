@@ -43,6 +43,12 @@ catch (Throwable $error) { $registrationCourses = []; }
                     <h1 id="welcome-title">Your next chapter <span>starts here.</span></h1>
                     <p class="welcome-description">Sign in to stay connected with your classes, academic records, and the services that support your college journey.</p>
                 </div>
+                <div class="welcome-art" aria-hidden="true">
+                    <span class="welcome-orbit"></span>
+                    <span class="welcome-book welcome-book--back"></span>
+                    <span class="welcome-book welcome-book--front"><i></i><i></i><i></i></span>
+                    <span class="welcome-spark">&#10022;</span>
+                </div>
                 <p class="welcome-footer">Learn with purpose. Grow with confidence.</p>
             </div>
         </section>
@@ -71,10 +77,6 @@ catch (Throwable $error) { $registrationCourses = []; }
                                         <label class="login-role-option">
                                             <input type="radio" name="login_role" value="student" checked>
                                             <span>Student</span>
-                                        </label>
-                                        <label class="login-role-option">
-                                            <input type="radio" name="login_role" value="admin">
-                                            <span>Admin</span>
                                         </label>
                                         <label class="login-role-option">
                                             <input type="radio" name="login_role" value="professor">
@@ -115,6 +117,7 @@ catch (Throwable $error) { $registrationCourses = []; }
                             Keep your password private. Log out after use.
                         </p>
                         <p class="auth-switch" id="student-register-prompt" hidden>New student? <button class="text-button" id="show-registration" type="button" aria-controls="registration-face">Register here</button></p>
+                        <p class="auth-switch">New professor? <a href="professor_register.php">Register with your faculty ID</a></p>
                         <footer class="card-footer">
                             <span>Having trouble signing in?</span>
                             <details id="school-help" class="office-help">

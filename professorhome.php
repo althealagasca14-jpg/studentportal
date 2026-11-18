@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/app/helpers/professor_support.php';
+require_once __DIR__ . '/app/helpers/classroom_support.php';
 header('X-Frame-Options: SAMEORIGIN');
 header('Cache-Control: private, no-store');
 header('X-Content-Type-Options: nosniff');
@@ -127,6 +128,8 @@ foreach ($classwork as $item) {
 }
 $flash = $_SESSION['classwork_saved'] ?? $_SESSION['professor_reply_success'] ?? '';
 unset($_SESSION['classwork_saved'], $_SESSION['professor_reply_success']);
+$questionAlerts=[];
+if(isset($professor['id'])){try{$questionAlerts=kns_classroom_question_alerts($data,(int)$professor['id']);}catch(Throwable $alertError){error_log('[professor-alerts] '.$alertError->getMessage());}}
 $csrfToken = kns_subject_csrf_token();
 $professorPageTitle = 'Professor portal';
 $professorPageDescription = 'Manage classwork and communicate with your students.';
@@ -143,17 +146,18 @@ $professorPageDescription = 'Manage classwork and communicate with your students
     <script src="assets/js/professor-portal.js?v=1" defer></script>
 </head>
 <?php require __DIR__ . '/app/views/partials/professor_shell_start.php'; ?>
+    <?php foreach($questionAlerts as $alert):?><section class="pf-notice" role="status"><h2>Repeated-question alert</h2><p><?= (int)$alert['students'] ?> students asked about <?= kns_subject_escape(kns_classroom_question_topics()[$alert['topic']]) ?> for “<?= kns_subject_escape($alert['title']) ?>” in the last 48 hours. Consider a class update. Private messages are not shared.</p><a href="classroom.php?class=<?= (int)$alert['class_id'] ?>&amp;tab=updates">Open class updates &rarr;</a></section><?php endforeach;?>
     <?php if ($dashboardError): ?><p class="pf-notice pf-error" role="alert"><?= kns_subject_escape($dashboardError) ?></p><?php endif; ?>
     <?php if ($flash): ?><p class="pf-notice" role="status"><?= kns_subject_escape($flash) ?></p><?php endif; ?>
     <?php if (!$ready): ?>
         <section class="pf-panel pf-empty"><span class="pf-empty-icon"><?= kns_ui_icon('book') ?></span><h2>Your workspace is being prepared</h2><p>Ask the school office to connect professor subject assignments and verified class enrollments.</p></section>
     <?php elseif (!$professorSelectedClass): ?>
         <section class="pf-panel"><div class="pf-panel-heading"><div><h2>Your assigned subjects</h2><p>Classwork and conversations become available when a section and term has verified student enrollments.</p></div></div>
-            <?php if (!$assignedSubjects): ?><div class="pf-empty"><span class="pf-empty-icon"><?= kns_ui_icon('book') ?></span><h3>No classes assigned yet</h3><p>Contact the school office to connect your subjects.</p></div><?php endif; ?>
+            <?php if (!$assignedSubjects): ?><div class="pf-empty"><span class="pf-empty-icon"><?= kns_ui_icon('book') ?></span><h3>Create your first class</h3><p><a href="classes.php">Create a subject and section</a>, then share its class code with your students.</p></div><?php endif; ?>
             <?php foreach ($assignedSubjects as $item): ?><a class="pf-work-row" href="professor_classwork.php?id=<?= (int) $item['id'] ?>"><span class="pf-item-icon"><?= kns_ui_icon('book') ?></span><span class="pf-item-copy"><strong><?= kns_subject_escape($item['subject_name']) ?></strong><small>Enrollment setup pending</small></span><?= kns_ui_icon('arrow') ?></a><?php endforeach; ?>
         </section>
     <?php elseif ($professorView === 'classwork'): ?>
-        <section class="pf-panel" aria-labelledby="pf-work-title">
+        <section class="pf-panel pf-work-panel" aria-labelledby="pf-work-title">
             <div class="pf-panel-heading"><div><h2 id="pf-work-title">Classwork for this class</h2><p>Activities, quizzes, exams, and projects <span class="pf-dot">·</span> <?= count($classwork) ?> <?= count($classwork) === 1 ? 'item' : 'items' ?><?= $draftCount ? ' · ' . $draftCount . ' draft' . ($draftCount === 1 ? '' : 's') : '' ?></p></div>
                 <a class="pf-button pf-primary" href="professor_classwork.php?id=<?= (int) $professorSelectedClass['subject_id'] ?>&amp;class=<?= $professorClassId ?>"><span aria-hidden="true">+</span> Create classwork</a>
             </div>
@@ -173,7 +177,7 @@ $professorPageDescription = 'Manage classwork and communicate with your students
             <p class="pf-panel-footnote">Drafts stay private. Select a draft to edit, or a published item to view submissions.</p>
         </section>
     <?php elseif ($professorView === 'students'): ?>
-        <section class="pf-panel" aria-labelledby="pf-students-title">
+        <section class="pf-panel pf-roster-panel" aria-labelledby="pf-students-title">
             <div class="pf-panel-heading"><div><h2 id="pf-students-title">Students in this class <span class="pf-count"><?= count($roster) ?></span></h2><p>Verified active enrollments for <?= kns_subject_escape($professorSelectedClass['section']) ?>.</p></div><label class="pf-search"><?= kns_ui_icon('search') ?><span class="pf-visually-hidden">Search student accounts</span><input type="search" data-pf-student-search placeholder="Search students"></label></div>
             <div class="pf-table-scroll"><table class="pf-student-table"><thead><tr><th scope="col">Student account</th><th scope="col">Section</th><th scope="col">Enrollment</th><th scope="col"><span class="pf-visually-hidden">Actions</span></th></tr></thead><tbody>
                 <?php foreach ($roster as $member): ?><tr data-pf-student="<?= kns_subject_escape($member['username']) ?>"><td><span class="pf-student-identity"><span class="pf-avatar"><?= kns_subject_escape(kns_professor_initials($member['username'])) ?></span><strong><?= kns_subject_escape($member['username']) ?></strong></span></td><td><?= kns_subject_escape($professorSelectedClass['section']) ?></td><td><span class="pf-status">Active</span></td><td><a class="pf-text-link" href="<?= kns_subject_escape(kns_professor_url('messages', $professorClassId, ['student' => $member['enrollment_id']])) ?>"><?= kns_ui_icon('chat') ?> Message</a></td></tr><?php endforeach; ?>

@@ -1,5 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/helpers/portal_support.php';
+require_once __DIR__ . '/classwork_files.php';
 
 const KNS_CLASSWORK_MAX_QUESTIONS = 200;
 const KNS_CLASSWORK_MAX_TEXT_BYTES = 1024 * 1024;
@@ -104,7 +105,7 @@ function kns_classwork_questions($json, bool $publishing): array
 
 function kns_classwork_for_student(mysqli $data, array $enrollment): array
 {
-    $query = $data->prepare("SELECT w.id, w.title, w.instructions, w.category, w.questions_json,w.due_at,g.score,g.max_score,g.feedback,
+    $query = $data->prepare("SELECT w.id, w.title, w.instructions, w.category, w.questions_json,w.due_at,w.submission_mode,w.file_points,sub.id AS submission_id,g.score,g.max_score,g.feedback,
         sub.answers_json, sub.submitted_at FROM subject_classwork w
         JOIN subject_professors p ON p.subject_id = w.subject_id AND p.professor_id = w.professor_id
         JOIN user u ON u.id = p.professor_id AND u.usertype = 'professor'
@@ -127,6 +128,8 @@ function kns_classwork_for_student(mysqli $data, array $enrollment): array
         $row['answers'] = $row['answers_json'] !== null
             ? json_decode($row['answers_json'], true, 64, JSON_THROW_ON_ERROR) : [];
         unset($row['answers_json']);
+        $row['files']=kns_classwork_file_rows($data,'work',(int)$row['id']);
+        $row['submission_files']=$row['submission_id']?kns_classwork_file_rows($data,'submission',(int)$row['submission_id']):[];
     }
     unset($row);
     return $rows;

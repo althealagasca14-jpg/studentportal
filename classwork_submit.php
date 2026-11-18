@@ -14,6 +14,7 @@ if (($_SESSION['usertype'] ?? '') !== 'student') {
 }
 $subjectId = filter_var($_POST['subject_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 $enrollmentId = filter_var($_POST['enrollment_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+$createdPaths = [];
 $workId = filter_var($_POST['classwork_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 if (!$subjectId || !$enrollmentId || !$workId) {
     http_response_code(400);
@@ -34,6 +35,7 @@ try {
         http_response_code(403);
         throw new InvalidArgumentException('Your student account or classwork access could not be verified.');
     }
+    $attachments=kns_subject_validate_uploads($_FILES);
     $data->begin_transaction();
     try {
         $query = $data->prepare('SELECT id, subject_id, section, academic_year, semester FROM subject_enrollments
@@ -45,7 +47,7 @@ try {
             http_response_code(403);
             throw new InvalidArgumentException('This enrollment is not available to your student account.');
         }
-        $query = $data->prepare("SELECT w.questions_json FROM subject_classwork w
+        $query = $data->prepare("SELECT w.questions_json,w.submission_mode,w.file_points FROM subject_classwork w
             JOIN subject_professors p ON p.subject_id = w.subject_id AND p.professor_id = w.professor_id
             JOIN user u ON u.id = p.professor_id AND u.usertype = 'professor' AND u.account_status='active' JOIN subject_sections ss ON ss.subject_id=w.subject_id AND ss.section=w.section AND ss.academic_year=w.academic_year AND ss.semester=w.semester AND ss.professor_id=w.professor_id
             WHERE w.id = ? AND w.subject_id = ? AND w.section = ? AND w.academic_year = ? AND w.semester = ?
@@ -57,30 +59,21 @@ try {
             http_response_code(403);
             throw new InvalidArgumentException('This published classwork is not available to your section and term.');
         }
-        $questions = json_decode($work['questions_json'], true, 64, JSON_THROW_ON_ERROR);
-        $posted = $_POST['answers'] ?? null;
-        if (!is_array($posted) || count($posted) !== count($questions)) throw new InvalidArgumentException('Answer every question before submitting.');
-        $answers = [];
-        foreach ($questions as $index => $question) {
-            $answer = kns_classwork_text($posted[$index] ?? null, 10000, 'Answer ' . ($index + 1));
-            if ($question['type'] === 'multiple_choice'
-                && (!ctype_digit($answer) || !isset($question['choices'][(int) $answer]))) {
-                throw new InvalidArgumentException('Choose one listed choice for question ' . ($index + 1) . '.');
-            }
-            $answers[] = $answer;
-        }
+        $answers=kns_classwork_answers($work,$_POST,$attachments);
         $json = json_encode($answers, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
         if (strlen($json) > KNS_CLASSWORK_MAX_TEXT_BYTES) throw new InvalidArgumentException('Your total answers exceed 1 MiB. Shorten them before submitting.');
         $query = $data->prepare('INSERT INTO subject_classwork_submissions (classwork_id, enrollment_id, answers_json) VALUES (?, ?, ?)');
         $query->bind_param('iis', $workId, $enrollmentId, $json);
         $query->execute();
+        kns_classwork_store_files($data,'submission',(int)$data->insert_id,$attachments,$createdPaths);
         $data->commit();
     } catch (Throwable $saveError) {
         $data->rollback();
+        kns_classwork_cleanup_files($createdPaths);
         throw $saveError;
     }
     unset($_SESSION['classwork_retry'][$enrollmentId][$workId]);
-    $_SESSION['classwork_notice'][$enrollmentId] = 'Your answers were submitted inside the Student Portal.';
+    $_SESSION['classwork_notice'][$enrollmentId] = 'Your submission was saved. Submitted files stay private to you and your professor.';
 } catch (Throwable $error) {
     if ($error instanceof mysqli_sql_exception && $error->getCode() === 1062) {
         $_SESSION['classwork_error'][$enrollmentId] = 'This classwork was already submitted. Your original answers have been kept.';

@@ -1,4 +1,9 @@
 <?php
+// Admin retirement: preserve historical code, shared helpers and database records.
+http_response_code(410);
+header('Content-Type: text/plain; charset=UTF-8');
+header('Cache-Control: no-store');
+exit('The Admin dashboard has been retired. Student and Professor workspaces remain available.');
 session_start();
 
 if (!isset($_SESSION['username'] ) || $_SESSION['usertype'] !== 'admin') {

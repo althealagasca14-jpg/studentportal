@@ -23,6 +23,14 @@ try {
         $id=(int)$db->insert_id;
         kns_portal_notify($db,$id,'security','Account created','Your portal account is ready. Class access requires enrollment confirmed by the school.');
         $message='Student account created. You can sign in using your student number. Class access requires verified enrollment.';
+    } elseif($action==='professor_register') {
+        require_once __DIR__ . '/app/helpers/registration_support.php';
+        $faculty=kns_portal_text($_POST['faculty_id']??'',50,'faculty ID');
+        kns_portal_rate_limit($db,'professor_register',$faculty,5);
+        $db->begin_transaction();
+        try { kns_register_professor($db,$_POST); $db->commit(); }
+        catch(Throwable $error) { $db->rollback(); throw $error; }
+        $message='Professor account created. You can now sign in with your faculty ID.';
     } elseif($action==='recover') {
         $identifier=kns_portal_text($_POST['identifier']??'',191,'account identifier');
         kns_portal_rate_limit($db,'recover',$identifier,5);
@@ -53,17 +61,18 @@ try {
         $message='Notifications marked read.';
     } elseif($action==='faculty_message') {
         $user=kns_portal_user($db,['professor']);
-        kns_faculty_send($db,$user,(int)($_POST['admin_id']??0),$_POST['message']??'',$_FILES);
-        $message='Message sent to the administrator.';
+        http_response_code(410);
+        throw new InvalidArgumentException('Admin messaging is archived. Existing messages are preserved.');
     } elseif($action==='faculty_read') {
         $user=kns_portal_user($db,['professor']);
         kns_portal_query($db,'UPDATE admin_professor_messages SET read_at=COALESCE(read_at,NOW()) WHERE professor_id=? AND admin_id=? AND sender_id=admin_id',[$user['id'],(int)($_POST['admin_id']??0)]);
     } elseif($action==='grade') {
+        require_once __DIR__.'/app/classwork/classwork_files.php';
         $user=kns_portal_user($db,['professor']);
         if(!kns_portal_permission($db,(int)$user['id'],'record_grades')) {http_response_code(403);throw new InvalidArgumentException('Grading permission is required.');}
-        $submission=kns_portal_one($db,'SELECT sub.id,w.questions_json FROM subject_classwork_submissions sub JOIN subject_classwork w ON w.id=sub.classwork_id JOIN subject_sections ss ON ss.subject_id=w.subject_id AND ss.section=w.section AND ss.academic_year=w.academic_year AND ss.semester=w.semester AND ss.professor_id=w.professor_id WHERE sub.id=? AND w.professor_id=?',[(int)($_POST['submission_id']??0),$user['id']]);
+        $submission=kns_portal_one($db,'SELECT sub.id,w.questions_json,w.submission_mode,w.file_points FROM subject_classwork_submissions sub JOIN subject_classwork w ON w.id=sub.classwork_id JOIN subject_sections ss ON ss.subject_id=w.subject_id AND ss.section=w.section AND ss.academic_year=w.academic_year AND ss.semester=w.semester AND ss.professor_id=w.professor_id WHERE sub.id=? AND w.professor_id=?',[(int)($_POST['submission_id']??0),$user['id']]);
         if(!$submission) {http_response_code(403);throw new InvalidArgumentException('Submission is not assigned to you.');}
-        $max=array_sum(array_column(json_decode($submission['questions_json'],true,64,JSON_THROW_ON_ERROR),'points'));
+        $max=kns_classwork_max_score($submission,json_decode($submission['questions_json'],true,64,JSON_THROW_ON_ERROR));
         $score=$_POST['score']??null;
         if(!is_scalar($score)||!is_numeric($score)||!is_finite((float)$score)||(float)$score<0||(float)$score>$max||round((float)$score,2)!=(float)$score)throw new InvalidArgumentException('Enter a score from 0 to '.$max.' with at most two decimal places.');
         $feedback=kns_portal_text($_POST['feedback']??'',5000,'feedback',false);
@@ -78,7 +87,7 @@ try {
     } else {http_response_code(404);throw new InvalidArgumentException('Action not found.');}
     echo json_encode(['ok'=>true,'message'=>$message]);
 }catch(Throwable $error){
-    if($error instanceof mysqli_sql_exception&&$error->getCode()===1062){http_response_code(409);$message='That student number or email is already registered.';}
+    if($error instanceof mysqli_sql_exception&&$error->getCode()===1062){http_response_code(409);$message=($action??'')==='professor_register'?'That faculty ID, account identifier or email is already registered.':'That student number or email is already registered.';}
     elseif($error instanceof InvalidArgumentException){if(http_response_code()<400)http_response_code(422);$message=$error->getMessage();}
     else{error_log('[portal-action] '.$error->getMessage());http_response_code(503);$message='The request could not be completed. Please try again.';}
     echo json_encode(['ok'=>false,'message'=>$message]);

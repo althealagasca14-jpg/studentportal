@@ -222,3 +222,53 @@
     .student-login .auth-card-inner { transition: none; }
 }
 
+
+/* Approved portal palette; existing auth faces and controls retain their behavior. */
+.student-login { --deep-green:#143c32; --green:#164d3b; --gold:#d9e8b7; --ink:#243c32; --muted:#647366; --border:#dce3d7; background:#fcfcf8; }
+.student-login .portal-header { border-color:#e3e8e1; background:#fcfcf8; }
+.student-login .portal-brand strong { font-weight:650; }
+.student-login .portal-nav .nav-login { border-radius:9px; box-shadow:none; }
+.student-login .welcome-panel { padding:48px clamp(32px,4vw,70px); background:#143c32; }
+.student-login .welcome-content { max-width:510px; }
+.student-login .school-identity { gap:16px; margin-bottom:44px; }
+.student-login .school-seal--hero { width:76px; height:76px; }
+.student-login .school-name { font-size:22px; font-weight:600; }
+.student-login .school-location { color:#b5c8bb; letter-spacing:1px; }
+.student-login .portal-eyebrow { color:#d9e8b7; font-size:11px; }
+.student-login .welcome-message h1 { font:400 clamp(44px,4.2vw,67px)/1.14 Georgia,"Times New Roman",serif; letter-spacing:-2px; }
+.student-login .welcome-message h1 span { font-style:italic; }
+.student-login .welcome-description { max-width:390px; margin-top:24px; color:#b5c8bb; font-size:14px; line-height:1.85; }
+.student-login .welcome-footer { margin-top:24px; color:#b5c8bb; font-size:12px; }
+.student-login .welcome-art { position:relative; height:190px; max-width:350px; margin-top:30px; }
+.student-login .welcome-orbit { position:absolute; width:165px; height:165px; top:5px; left:105px; border:1px solid #bed2a347; border-radius:50%; }
+.student-login .welcome-book { position:absolute; width:136px; height:108px; border:1px solid #d7e0b9; border-radius:8px 16px 16px 8px; background:#d8dfb5; transform:rotate(9deg); top:52px; left:110px; }
+.student-login .welcome-book--front { top:25px; left:35px; padding:25px 22px; background:#f0f2df; transform:rotate(-9deg); box-shadow:0 16px 30px #071b2026; border-left:10px solid #b0c19a; }
+.student-login .welcome-book i { display:block; height:3px; margin:10px 0; background:#8b9f76; }
+.student-login .welcome-book i:last-child { width:65%; }
+.student-login .welcome-spark { position:absolute; top:4px; right:8px; color:#c7dba3; font-size:62px; line-height:1; }
+.student-login .login-panel { padding:44px clamp(24px,4vw,70px); background:#fcfcf8; }
+.student-login .auth-card { max-width:460px; }
+.student-login .login-card { max-width:none; padding:32px 24px; border:0; border-radius:0; background:transparent; box-shadow:none; }
+.student-login .login-card::before { content:none; }
+.student-login .login-card h2, .student-login .recovery-content h2 { font:400 clamp(28px,2.6vw,36px)/1.2 Georgia,"Times New Roman",serif; letter-spacing:-1px; }
+.student-login .card-eyebrow { font-size:10px; letter-spacing:1.5px; }
+.student-login .login-role-options { border-color:#e3e8dc; background:#f0f2eb; }
+.student-login .login-role-option input:checked + span { background:white; color:#164d3b; box-shadow:0 1px 4px #1f3a1c12; }
+.student-login .form-field input, .student-login .form-field select { border-color:#dce3d7; border-radius:8px; background:white; }
+.student-login .login-button { border-radius:8px; box-shadow:none; }
+.student-login .recovery-dialog { border-color:#e3e8e1; border-radius:17px; background:#fcfcf8; }
+@media (max-width:900px) {
+    .student-login .welcome-panel { padding:36px 28px; }
+    .student-login .welcome-art { display:none; }
+    .student-login .login-panel { padding:32px 24px; }
+    .student-login .school-identity { margin-bottom:28px; }
+}
+@media (max-width:600px) {
+    .student-login .login-panel { padding:24px 16px; }
+    .student-login .login-card { padding:18px 8px; }
+    .student-login .welcome-message h1 { font-size:40px; }
+    .student-login .school-name { font-size:20px; }
+}
+
+/* Final Admin retirement leaves Student and Professor account choices. */
+.student-login .login-role-options{grid-template-columns:repeat(2,minmax(0,1fr))}

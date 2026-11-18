@@ -162,3 +162,56 @@
 .student-notifications > div { max-height:380px; overflow:auto; }
 .student-notifications p { margin:10px 0; }
 .student-notifications small { display:block; color:#6d8176; }
+
+/* Approved visual design, scoped to the existing student workspace. */
+.student-shell { --sidebar-width:237px; --portal-green:#164d3b; --portal-deep:#143c32; --portal-ink:#243c32; --portal-muted:#647366; --portal-border:#e3e8e1; background:#f7f8f4; font-family:"Segoe UI",Arial,sans-serif; }
+.student-shell .student-sidebar { padding:30px 18px 24px; }
+.student-shell .sidebar-brand { gap:11px; padding-inline:4px; }
+.student-shell .sidebar-brand strong { font-size:17px; font-weight:650; letter-spacing:-.4px; }
+.student-shell .sidebar-brand small { margin-top:4px; font-size:10px; }
+.student-shell .brand-mark { width:39px; height:42px; border:1px solid #bed2a33d; border-radius:11px; background:#e7f0d60e; color:#d7e6b3; }
+.student-shell .brand-mark .ui-icon { width:24px; height:24px; }
+.student-shell .student-nav a { min-height:48px; padding:12px 14px; border-radius:9px; font-size:13px; font-weight:600; }
+.student-shell .student-nav a[aria-current="page"] { background:#2b5545; box-shadow:none; }
+.student-shell .student-main { padding:32px clamp(20px,3vw,48px) 50px; }
+.student-shell .student-heading h1 { font:400 clamp(30px,2.8vw,40px)/1.2 Georgia,"Times New Roman",serif; letter-spacing:-1px; }
+.student-shell[data-current-view="dashboard"] .portal-page-heading { padding:28px; border:1px solid #d5e4d5; border-radius:20px; background:#e0eee2; }
+.student-shell .heading-description { color:#576e5b; }
+.student-shell .ui-eyebrow { color:#416444; font-size:10px; letter-spacing:1.5px; }
+.student-shell .term-pill { border-color:#dce4d7; background:#fcfcf8; color:#4f6753; }
+.student-shell .ui-card { border-radius:17px; box-shadow:none; }
+.student-shell .metric-tile { border-color:transparent; background:#e0eee2; }
+.student-shell .metric-tile:nth-child(2) { background:#eae6f5; }
+.student-shell .metric-tile:nth-child(3) { background:#f5e8db; }
+.student-shell .metric-tile:nth-child(4) { background:#f2edda; }
+.student-shell .metric-heading h2 { color:#52634f; font-size:12px; }
+.student-shell .metric-heading .soft-icon { background:#ffffff80; color:#416444; }
+.student-shell .metric-value { font-weight:600; }
+.student-shell .metric-caption { color:#5c6c5c; }
+.student-shell .metric-status { color:#355a3e; }
+.student-shell .panel-heading h2, .student-shell .subjects-heading h2 { font:400 24px/1.3 Georgia,"Times New Roman",serif; letter-spacing:-.5px; }
+.student-shell .subject-filter-panel { border-color:#e3e8e1; border-radius:17px; background:white; box-shadow:none; }
+.student-shell .portal-subject-card { padding:0; overflow:hidden; }
+.student-shell .portal-subject-card .subject-card-top { min-height:112px; margin:0 0 20px; padding:20px; background:#e0eee2; }
+.student-shell .portal-subject-card:nth-child(3n+2) .subject-card-top { background:#eae6f5; }
+.student-shell .portal-subject-card:nth-child(3n) .subject-card-top { background:#f5e8db; }
+.student-shell .portal-subject-card .subject-card-top .soft-icon { width:54px; height:58px; border:1px solid #ffffff80; border-radius:14px; background:#ffffff70; color:#416444; }
+.student-shell .portal-subject-card .subject-card-top .ui-icon { width:30px; height:30px; }
+.student-shell .portal-subject-card .subject-status { background:#ffffffb3; color:#465d47; font-size:10px; }
+.student-shell .portal-subject-card h3, .student-shell .portal-subject-card .subject-professor, .student-shell .portal-subject-card .subject-description { margin-inline:22px; }
+.student-shell .portal-subject-card h3 { font-size:16px; font-weight:650; }
+.student-shell .portal-subject-card .subject-description { color:#657467; }
+.student-shell .portal-subject-card .subject-card-actions { margin:20px 22px 22px; }
+.student-shell .subject-open { background:#f0f3eb; color:#164d3b; }
+@media (max-width:760px) {
+    .student-shell .student-main { margin-left:0; padding:24px 20px 40px; }
+    .student-shell .student-sidebar { width:100%; padding:18px; }
+    .student-shell.has-ui-script .student-sidebar { width:280px; padding:24px 18px; }
+    .student-shell[data-current-view="dashboard"] .portal-page-heading { padding:22px; }
+}
+@media (max-width:540px) {
+    .student-shell .student-main { padding-inline:16px; }
+    .student-shell .student-heading h1 { font-size:30px; }
+    .student-shell .portal-subject-card .subject-card-top { min-height:96px; }
+    .student-shell .metric-heading { align-items:flex-start; flex-wrap:wrap; }
+}

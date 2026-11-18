@@ -25,16 +25,10 @@
             instruction: "Enter your student details to continue to the portal.",
             storageKey: "kns.portal.studentNumber"
         },
-        admin: {
-            label: "Username",
-            placeholder: "Enter your username",
-            instruction: "Enter your admin username and password to continue.",
-            storageKey: "kns.portal.adminUsername"
-        },
         professor: {
-            label: "Account ID",
-            placeholder: "Enter your account ID",
-            instruction: "Enter your professor account ID and password to continue.",
+            label: "Faculty ID",
+            placeholder: "Enter your faculty ID",
+            instruction: "Enter your faculty ID and password to continue.",
             storageKey: "kns.portal.professorAccountId"
         }
     };
